@@ -17,7 +17,7 @@ interface UserPlant {
   user_id: string;
   last_watered: string;
   next_water_date: string;
-  profiles: { email: string };
+  profiles: { email: string } | null;
 }
 
 interface StaticPage {
@@ -43,17 +43,27 @@ export const AdminPanel = () => {
   const loadAdminData = async () => {
     setLoading(true);
     
-    // Load all user plants with user emails
+    // Load all user plants with user emails - fix the query structure
     const { data: plantsData, error: plantsError } = await supabase
       .from('user_plants')
       .select(`
-        *,
-        profiles!inner(email)
+        id,
+        plant_name,
+        scientific_name,
+        user_id,
+        last_watered,
+        next_water_date,
+        profiles (email)
       `)
       .order('created_at', { ascending: false });
 
     if (plantsError) {
       console.error('Error loading user plants:', plantsError);
+      toast({
+        title: "Error",
+        description: "Failed to load user plants.",
+        variant: "destructive",
+      });
     } else {
       setUserPlants(plantsData || []);
     }
@@ -162,7 +172,7 @@ export const AdminPanel = () => {
                         <p className="text-sm text-gray-500 italic">{plant.scientific_name}</p>
                       )}
                       <p className="text-sm text-gray-600">
-                        Owner: {plant.profiles.email}
+                        Owner: {plant.profiles?.email || 'Anonymous User'}
                       </p>
                       <p className="text-sm text-gray-600">
                         Last watered: {plant.last_watered} | Next: {plant.next_water_date}

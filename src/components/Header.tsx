@@ -1,15 +1,16 @@
 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { Leaf, LogOut, Settings } from 'lucide-react';
+import { Leaf, LogOut, Settings, User, UserPlus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface HeaderProps {
   onAdminToggle: (isAdmin: boolean) => void;
+  onAuthToggle: (showAuth: boolean) => void;
 }
 
-export const Header = ({ onAdminToggle }: HeaderProps) => {
+export const Header = ({ onAdminToggle, onAuthToggle }: HeaderProps) => {
   const { user, signOut } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -45,29 +46,54 @@ export const Header = ({ onAdminToggle }: HeaderProps) => {
           </div>
           
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">
-              Welcome, {user?.email}
-            </span>
-            
-            {isAdmin && (
-              <Button
-                onClick={toggleAdminView}
-                variant="outline"
-                size="sm"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Admin Panel
-              </Button>
+            {user ? (
+              <>
+                <span className="text-sm text-gray-600">
+                  Welcome, {user.email}
+                </span>
+                
+                {isAdmin && (
+                  <Button
+                    onClick={toggleAdminView}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Admin Panel
+                  </Button>
+                )}
+                
+                <Button
+                  onClick={signOut}
+                  variant="outline"
+                  size="sm"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <span className="text-sm text-gray-600">
+                  Sign up to get email reminders
+                </span>
+                <Button
+                  onClick={() => onAuthToggle(true)}
+                  variant="outline"
+                  size="sm"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Sign In
+                </Button>
+                <Button
+                  onClick={() => onAuthToggle(true)}
+                  size="sm"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Sign Up
+                </Button>
+              </>
             )}
-            
-            <Button
-              onClick={signOut}
-              variant="outline"
-              size="sm"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
           </div>
         </div>
       </div>

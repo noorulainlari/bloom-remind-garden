@@ -4,14 +4,18 @@ import { PlantSelector } from './PlantSelector';
 import { PlantList } from './PlantList';
 import { AdminPanel } from './AdminPanel';
 import { Header } from './Header';
+import { AuthForm } from './AuthForm';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export const Dashboard = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const handlePlantAdded = () => {
@@ -77,7 +81,7 @@ export const Dashboard = () => {
   if (showAdmin) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header onAdminToggle={setShowAdmin} />
+        <Header onAdminToggle={setShowAdmin} onAuthToggle={setShowAuth} />
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <AdminPanel />
         </div>
@@ -87,7 +91,24 @@ export const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onAdminToggle={setShowAdmin} />
+      <Header onAdminToggle={setShowAdmin} onAuthToggle={setShowAuth} />
+      
+      {/* Auth Modal */}
+      {showAuth && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full relative">
+            <Button
+              onClick={() => setShowAuth(false)}
+              variant="ghost"
+              size="sm"
+              className="absolute top-2 right-2"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <AuthForm onSuccess={() => setShowAuth(false)} />
+          </div>
+        </div>
+      )}
       
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="space-y-6">
@@ -98,6 +119,11 @@ export const Dashboard = () => {
               </h1>
               <p className="text-gray-600 mt-2">
                 Track your plants and get reminders when it's time to water them.
+                {!user && (
+                  <span className="block text-green-600 font-medium mt-1">
+                    No signup required! You can use all features anonymously. Sign up only if you want email reminders.
+                  </span>
+                )}
               </p>
             </div>
             <Button onClick={exportPlantSchedule} variant="outline">
