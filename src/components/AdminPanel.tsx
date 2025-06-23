@@ -53,7 +53,7 @@ export const AdminPanel = () => {
         user_id,
         last_watered,
         next_water_date,
-        profiles (email)
+        profiles!user_plants_user_id_fkey (email)
       `)
       .order('created_at', { ascending: false });
 
