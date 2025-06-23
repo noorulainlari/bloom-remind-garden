@@ -17,7 +17,7 @@ interface UserPlant {
   user_id: string;
   last_watered: string;
   next_water_date: string;
-  profiles: { email: string } | null;
+  user_email?: string; // Made optional since we might not have the email
 }
 
 interface StaticPage {
@@ -43,7 +43,7 @@ export const AdminPanel = () => {
   const loadAdminData = async () => {
     setLoading(true);
     
-    // Load all user plants with user emails - fix the query structure
+    // Load all user plants without trying to join with profiles
     const { data: plantsData, error: plantsError } = await supabase
       .from('user_plants')
       .select(`
@@ -52,8 +52,7 @@ export const AdminPanel = () => {
         scientific_name,
         user_id,
         last_watered,
-        next_water_date,
-        profiles!user_plants_user_id_fkey (email)
+        next_water_date
       `)
       .order('created_at', { ascending: false });
 
@@ -65,7 +64,29 @@ export const AdminPanel = () => {
         variant: "destructive",
       });
     } else {
-      setUserPlants(plantsData || []);
+      // Get user emails separately for plants that have user_ids
+      const plantsWithEmails = await Promise.all(
+        (plantsData || []).map(async (plant) => {
+          if (plant.user_id) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('email')
+              .eq('id', plant.user_id)
+              .single();
+            
+            return {
+              ...plant,
+              user_email: profile?.email || 'Unknown User'
+            };
+          }
+          return {
+            ...plant,
+            user_email: 'Anonymous User'
+          };
+        })
+      );
+      
+      setUserPlants(plantsWithEmails);
     }
 
     // Load static pages
@@ -172,7 +193,7 @@ export const AdminPanel = () => {
                         <p className="text-sm text-gray-500 italic">{plant.scientific_name}</p>
                       )}
                       <p className="text-sm text-gray-600">
-                        Owner: {plant.profiles?.email || 'Anonymous User'}
+                        Owner: {plant.user_email || 'Anonymous User'}
                       </p>
                       <p className="text-sm text-gray-600">
                         Last watered: {plant.last_watered} | Next: {plant.next_water_date}
