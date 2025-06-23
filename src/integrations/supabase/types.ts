@@ -9,7 +9,158 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      plant_species: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          scientific_name: string | null
+          watering_interval_days: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          scientific_name?: string | null
+          watering_interval_days: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          scientific_name?: string | null
+          watering_interval_days?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          consent_to_reminders: boolean | null
+          created_at: string | null
+          email: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          consent_to_reminders?: boolean | null
+          created_at?: string | null
+          email: string
+          id: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          consent_to_reminders?: boolean | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      static_pages: {
+        Row: {
+          content: string
+          id: string
+          meta_description: string | null
+          meta_title: string | null
+          slug: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          id?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          slug: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          id?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_plants: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_watered: string | null
+          next_water_date: string
+          photo_url: string | null
+          plant_name: string
+          scientific_name: string | null
+          updated_at: string | null
+          user_id: string | null
+          watering_interval_days: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_watered?: string | null
+          next_water_date: string
+          photo_url?: string | null
+          plant_name: string
+          scientific_name?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          watering_interval_days: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_watered?: string | null
+          next_water_date?: string
+          photo_url?: string | null
+          plant_name?: string
+          scientific_name?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          watering_interval_days?: number
+        }
+        Relationships: []
+      }
+      watering_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          plant_id: string | null
+          watered_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          plant_id?: string | null
+          watered_date?: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          plant_id?: string | null
+          watered_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watering_logs_plant_id_fkey"
+            columns: ["plant_id"]
+            isOneToOne: false
+            referencedRelation: "user_plants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +169,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "user" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +284,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["user", "admin"],
+    },
   },
 } as const
