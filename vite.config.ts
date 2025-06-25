@@ -6,7 +6,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? "/bloom-remind-garden/" : "/",
+  base: "/",
 
   server: {
     host: "::",

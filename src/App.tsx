@@ -29,7 +29,7 @@ const AppContent = () => {
   }, []);
 
   return (
-    <BrowserRouter basename="/bloom-remind-garden">
+    <BrowserRouter>
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/welcome" element={<Index />} />
