@@ -36,63 +36,95 @@ export const PlantSelector = ({ onPlantAdded }: PlantSelectorProps) => {
   }, []);
 
   const loadPlantSpecies = async () => {
-    const { data, error } = await supabase
-      .from('plant_species')
-      .select('*')
-      .order('name');
+    try {
+      const { data, error } = await supabase
+        .from('plant_species')
+        .select('*')
+        .order('name');
 
-    if (error) {
-      console.error('Error loading plant species:', error);
-    } else {
-      setPlantSpecies(data || []);
+      if (error) {
+        console.error('Error loading plant species:', error);
+      } else {
+        setPlantSpecies(data || []);
+      }
+    } catch (error) {
+      console.error('Unexpected error loading plant species:', error);
     }
+  };
+
+  const validateFile = (file: File): boolean => {
+    // Enhanced file validation
+    const maxSize = 5 * 1024 * 1024; // 5MB limit
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+    
+    if (file.size > maxSize) {
+      toast({
+        title: "File Too Large",
+        description: "Please select an image smaller than 5MB.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please select a JPG, PNG, WebP, or GIF image.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    if (!allowedExtensions.includes(fileExtension)) {
+      toast({
+        title: "Invalid File Extension",
+        description: "Please select a valid image file.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        toast({
-          title: "File Too Large",
-          description: "Please select an image smaller than 2MB.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        toast({
-          title: "Invalid File Type",
-          description: "Please select a JPG, PNG, or WebP image.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
+    if (file && validateFile(file)) {
       setPhoto(file);
+    } else {
+      e.target.value = '';
     }
   };
 
   const uploadPhoto = async (file: File): Promise<string | null> => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `plant-photos/${fileName}`;
+    try {
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `plant-photos/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('plant-photos')
-      .upload(filePath, file);
+      const { error: uploadError } = await supabase.storage
+        .from('plant-photos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-    if (uploadError) {
-      console.error('Error uploading photo:', uploadError);
+      if (uploadError) {
+        console.error('Error uploading photo:', uploadError);
+        return null;
+      }
+
+      const { data } = supabase.storage
+        .from('plant-photos')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Unexpected error uploading photo:', error);
       return null;
     }
-
-    const { data } = supabase.storage
-      .from('plant-photos')
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
   };
 
   const addPlant = async (e: React.FormEvent) => {
@@ -112,11 +144,22 @@ export const PlantSelector = ({ onPlantAdded }: PlantSelectorProps) => {
           setLoading(false);
           return;
         }
+
+        const intervalNum = parseInt(customInterval);
+        if (isNaN(intervalNum) || intervalNum < 1 || intervalNum > 365) {
+          toast({
+            title: "Invalid Watering Interval",
+            description: "Watering interval must be between 1 and 365 days.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
         
         plantData = {
-          plant_name: customName,
-          scientific_name: customScientificName,
-          watering_interval_days: parseInt(customInterval),
+          plant_name: customName.trim(),
+          scientific_name: customScientificName.trim() || null,
+          watering_interval_days: intervalNum,
         };
       } else {
         if (!selectedSpecies) {
@@ -145,6 +188,12 @@ export const PlantSelector = ({ onPlantAdded }: PlantSelectorProps) => {
       let photoUrl = null;
       if (photo) {
         photoUrl = await uploadPhoto(photo);
+        if (!photoUrl) {
+          toast({
+            title: "Upload Failed",
+            description: "Failed to upload photo. Plant will be added without image.",
+          });
+        }
       }
 
       const { data: userData } = await supabase.auth.getUser();
@@ -152,15 +201,16 @@ export const PlantSelector = ({ onPlantAdded }: PlantSelectorProps) => {
         .from('user_plants')
         .insert({
           ...plantData,
-          user_id: userData.user?.id,
+          user_id: userData.user?.id || null,
           photo_url: photoUrl,
           last_watered: new Date().toISOString().split('T')[0],
         });
 
       if (error) {
+        console.error('Error adding plant:', error);
         toast({
           title: "Error Adding Plant",
-          description: error.message,
+          description: error.message || "Failed to add plant. Please try again.",
           variant: "destructive",
         });
       } else {
@@ -176,6 +226,11 @@ export const PlantSelector = ({ onPlantAdded }: PlantSelectorProps) => {
         setCustomInterval('');
         setPhoto(null);
         setShowCustomForm(false);
+        
+        // Reset file input
+        const fileInput = document.getElementById('photo') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+        
         onPlantAdded();
       }
     } catch (error) {
@@ -244,6 +299,7 @@ export const PlantSelector = ({ onPlantAdded }: PlantSelectorProps) => {
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
                   placeholder="e.g., My Snake Plant"
+                  maxLength={100}
                   required
                 />
               </div>
@@ -254,6 +310,7 @@ export const PlantSelector = ({ onPlantAdded }: PlantSelectorProps) => {
                   value={customScientificName}
                   onChange={(e) => setCustomScientificName(e.target.value)}
                   placeholder="e.g., Sansevieria trifasciata"
+                  maxLength={100}
                 />
               </div>
               <div className="space-y-2">
@@ -273,12 +330,12 @@ export const PlantSelector = ({ onPlantAdded }: PlantSelectorProps) => {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="photo">Plant Photo (Optional)</Label>
+            <Label htmlFor="photo">Plant Photo (Optional - Max 5MB)</Label>
             <div className="flex items-center gap-2">
               <Input
                 id="photo"
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,image/gif"
                 onChange={handlePhotoChange}
                 className="flex-1"
               />

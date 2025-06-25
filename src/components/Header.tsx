@@ -19,21 +19,44 @@ export const Header = ({ onAdminToggle, onAuthToggle }: HeaderProps) => {
   }, [user]);
 
   const checkAdminStatus = async () => {
-    if (!user) return;
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
     
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
 
-    if (data && data.role === 'admin') {
-      setIsAdmin(true);
+      if (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+        return;
+      }
+
+      setIsAdmin(data?.role === 'admin');
+    } catch (error) {
+      console.error('Unexpected error checking admin status:', error);
+      setIsAdmin(false);
     }
   };
 
   const toggleAdminView = () => {
-    onAdminToggle(!isAdmin);
+    if (isAdmin) {
+      onAdminToggle(true);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      setIsAdmin(false);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (
@@ -64,7 +87,7 @@ export const Header = ({ onAdminToggle, onAuthToggle }: HeaderProps) => {
                 )}
                 
                 <Button
-                  onClick={signOut}
+                  onClick={handleSignOut}
                   variant="outline"
                   size="sm"
                 >

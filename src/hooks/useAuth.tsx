@@ -26,7 +26,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         setLoading(false);
 
-        if (session?.user) {
+        // Fix: Use setTimeout to prevent authentication deadlock
+        if (session?.user && event === 'SIGNED_IN') {
           setTimeout(async () => {
             await createUserProfile(session.user);
           }, 0);
@@ -44,42 +45,60 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const createUserProfile = async (user: User) => {
-    const { error } = await supabase
-      .from('profiles')
-      .upsert({
-        id: user.id,
-        email: user.email || '',
-        updated_at: new Date().toISOString(),
-      });
-    
-    if (error) {
-      console.error('Error creating profile:', error);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          email: user.email || '',
+          updated_at: new Date().toISOString(),
+        });
+      
+      if (error) {
+        console.error('Error creating profile:', error);
+      }
+    } catch (error) {
+      console.error('Unexpected error creating profile:', error);
     }
   };
 
   const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl
-      }
-    });
-    return { error };
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl
+        }
+      });
+      return { error };
+    } catch (error) {
+      console.error('Sign up error:', error);
+      return { error };
+    }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      return { error };
+    } catch (error) {
+      console.error('Sign in error:', error);
+      return { error };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
   };
 
   return (

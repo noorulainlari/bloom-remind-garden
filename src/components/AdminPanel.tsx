@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Edit, Save, Users, Leaf, FileText } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { Trash2, Edit, Save, Users, Leaf, FileText, AlertTriangle } from 'lucide-react';
 
 interface UserPlant {
   id: string;
@@ -17,7 +18,7 @@ interface UserPlant {
   user_id: string;
   last_watered: string;
   next_water_date: string;
-  user_email?: string; // Made optional since we might not have the email
+  user_email?: string;
 }
 
 interface StaticPage {
@@ -34,124 +35,216 @@ export const AdminPanel = () => {
   const [staticPages, setStaticPages] = useState<StaticPage[]>([]);
   const [editingPage, setEditingPage] = useState<StaticPage | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    loadAdminData();
-  }, []);
+    checkAuthorization();
+  }, [user]);
 
-  const loadAdminData = async () => {
-    setLoading(true);
-    
-    // Load all user plants without trying to join with profiles
-    const { data: plantsData, error: plantsError } = await supabase
-      .from('user_plants')
-      .select(`
-        id,
-        plant_name,
-        scientific_name,
-        user_id,
-        last_watered,
-        next_water_date
-      `)
-      .order('created_at', { ascending: false });
-
-    if (plantsError) {
-      console.error('Error loading user plants:', plantsError);
-      toast({
-        title: "Error",
-        description: "Failed to load user plants.",
-        variant: "destructive",
-      });
-    } else {
-      // Get user emails separately for plants that have user_ids
-      const plantsWithEmails = await Promise.all(
-        (plantsData || []).map(async (plant) => {
-          if (plant.user_id) {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('email')
-              .eq('id', plant.user_id)
-              .single();
-            
-            return {
-              ...plant,
-              user_email: profile?.email || 'Unknown User'
-            };
-          }
-          return {
-            ...plant,
-            user_email: 'Anonymous User'
-          };
-        })
-      );
-      
-      setUserPlants(plantsWithEmails);
+  const checkAuthorization = async () => {
+    if (!user) {
+      setIsAuthorized(false);
+      return;
     }
 
-    // Load static pages
-    const { data: pagesData, error: pagesError } = await supabase
-      .from('static_pages')
-      .select('*')
-      .order('slug');
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
 
-    if (pagesError) {
-      console.error('Error loading static pages:', pagesError);
-    } else {
-      setStaticPages(pagesData || []);
+      if (error) {
+        console.error('Error checking authorization:', error);
+        setIsAuthorized(false);
+        return;
+      }
+
+      const authorized = data?.role === 'admin';
+      setIsAuthorized(authorized);
+      
+      if (authorized) {
+        loadAdminData();
+      }
+    } catch (error) {
+      console.error('Unexpected error checking authorization:', error);
+      setIsAuthorized(false);
+    }
+  };
+
+  const loadAdminData = async () => {
+    if (!isAuthorized) return;
+    
+    setLoading(true);
+    
+    try {
+      // Load all user plants
+      const { data: plantsData, error: plantsError } = await supabase
+        .from('user_plants')
+        .select(`
+          id,
+          plant_name,
+          scientific_name,
+          user_id,
+          last_watered,
+          next_water_date
+        `)
+        .order('created_at', { ascending: false });
+
+      if (plantsError) {
+        console.error('Error loading user plants:', plantsError);
+        toast({
+          title: "Error",
+          description: "Failed to load user plants.",
+          variant: "destructive",
+        });
+      } else {
+        // Get user emails separately for plants that have user_ids
+        const plantsWithEmails = await Promise.all(
+          (plantsData || []).map(async (plant) => {
+            if (plant.user_id) {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('email')
+                .eq('id', plant.user_id)
+                .single();
+              
+              return {
+                ...plant,
+                user_email: profile?.email || 'Unknown User'
+              };
+            }
+            return {
+              ...plant,
+              user_email: 'Anonymous User'
+            };
+          })
+        );
+        
+        setUserPlants(plantsWithEmails);
+      }
+
+      // Load static pages
+      const { data: pagesData, error: pagesError } = await supabase
+        .from('static_pages')
+        .select('*')
+        .order('slug');
+
+      if (pagesError) {
+        console.error('Error loading static pages:', pagesError);
+      } else {
+        setStaticPages(pagesData || []);
+      }
+    } catch (error) {
+      console.error('Unexpected error loading admin data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load admin data.",
+        variant: "destructive",
+      });
     }
 
     setLoading(false);
   };
 
   const deleteUserPlant = async (plantId: string) => {
-    const { error } = await supabase
-      .from('user_plants')
-      .delete()
-      .eq('id', plantId);
+    if (!isAuthorized) return;
 
-    if (error) {
+    try {
+      const { error } = await supabase
+        .from('user_plants')
+        .delete()
+        .eq('id', plantId);
+
+      if (error) {
+        console.error('Error deleting plant:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete plant.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Plant Deleted",
+          description: "Plant has been removed.",
+        });
+        loadAdminData();
+      }
+    } catch (error) {
+      console.error('Unexpected error deleting plant:', error);
       toast({
         title: "Error",
         description: "Failed to delete plant.",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Plant Deleted",
-        description: "Plant has been removed.",
-      });
-      loadAdminData();
     }
   };
 
   const updateStaticPage = async (page: StaticPage) => {
-    const { error } = await supabase
-      .from('static_pages')
-      .update({
-        title: page.title,
-        content: page.content,
-        meta_title: page.meta_title,
-        meta_description: page.meta_description,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', page.id);
+    if (!isAuthorized) return;
 
-    if (error) {
+    try {
+      const { error } = await supabase
+        .from('static_pages')
+        .update({
+          title: page.title,
+          content: page.content,
+          meta_title: page.meta_title,
+          meta_description: page.meta_description,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', page.id);
+
+      if (error) {
+        console.error('Error updating page:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update page.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Page Updated",
+          description: "Static page has been updated successfully.",
+        });
+        setEditingPage(null);
+        loadAdminData();
+      }
+    } catch (error) {
+      console.error('Unexpected error updating page:', error);
       toast({
         title: "Error",
         description: "Failed to update page.",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Page Updated",
-        description: "Static page has been updated successfully.",
-      });
-      setEditingPage(null);
-      loadAdminData();
     }
   };
+
+  if (!user) {
+    return (
+      <Card>
+        <CardContent className="text-center py-8">
+          <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+          <p className="text-lg font-semibold">Authentication Required</p>
+          <p className="text-gray-600">Please sign in to access the admin panel.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <Card>
+        <CardContent className="text-center py-8">
+          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <p className="text-lg font-semibold">Access Denied</p>
+          <p className="text-gray-600">You do not have permission to access the admin panel.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (loading) {
     return <div className="text-center py-8">Loading admin data...</div>;
@@ -232,6 +325,7 @@ export const AdminPanel = () => {
                       ...editingPage,
                       title: e.target.value
                     })}
+                    maxLength={200}
                   />
                 </div>
                 <div className="space-y-2">
@@ -255,6 +349,7 @@ export const AdminPanel = () => {
                       ...editingPage,
                       meta_title: e.target.value
                     })}
+                    maxLength={60}
                   />
                 </div>
                 <div className="space-y-2">
@@ -266,6 +361,7 @@ export const AdminPanel = () => {
                       ...editingPage,
                       meta_description: e.target.value
                     })}
+                    maxLength={160}
                     rows={3}
                   />
                 </div>

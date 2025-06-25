@@ -24,12 +24,35 @@ export const Dashboard = () => {
 
   const exportPlantSchedule = async () => {
     try {
-      const { data: plants, error } = await supabase
+      // Security fix: Only export user's own plants or all plants if admin
+      let query = supabase
         .from('user_plants')
         .select('plant_name, scientific_name, watering_interval_days, last_watered, next_water_date')
         .order('next_water_date');
 
-      if (error) throw error;
+      // If user is not authenticated, only show plants with null user_id
+      if (!user) {
+        query = query.is('user_id', null);
+      } else {
+        // Check if user is admin
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        // If not admin, only show user's own plants
+        if (profile?.role !== 'admin') {
+          query = query.eq('user_id', user.id);
+        }
+      }
+
+      const { data: plants, error } = await query;
+
+      if (error) {
+        console.error('Export error:', error);
+        throw error;
+      }
 
       if (!plants || plants.length === 0) {
         toast({
@@ -40,16 +63,16 @@ export const Dashboard = () => {
         return;
       }
 
-      // Create CSV content
+      // Create CSV content with proper sanitization
       const headers = ['Plant Name', 'Scientific Name', 'Watering Interval (Days)', 'Last Watered', 'Next Water Date'];
       const csvContent = [
         headers.join(','),
         ...plants.map(plant => [
-          `"${plant.plant_name}"`,
-          `"${plant.scientific_name || ''}"`,
-          plant.watering_interval_days,
-          plant.last_watered,
-          plant.next_water_date
+          `"${(plant.plant_name || '').replace(/"/g, '""')}"`,
+          `"${(plant.scientific_name || '').replace(/"/g, '""')}"`,
+          plant.watering_interval_days || 0,
+          plant.last_watered || '',
+          plant.next_water_date || ''
         ].join(','))
       ].join('\n');
 
@@ -63,6 +86,7 @@ export const Dashboard = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       toast({
         title: "Export Successful",
@@ -72,7 +96,7 @@ export const Dashboard = () => {
       console.error('Export error:', error);
       toast({
         title: "Export Failed",
-        description: "Failed to export plant schedule.",
+        description: "Failed to export plant schedule. Please ensure you have permission to access this data.",
         variant: "destructive",
       });
     }
