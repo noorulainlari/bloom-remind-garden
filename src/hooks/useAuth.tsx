@@ -20,8 +20,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('AuthProvider: Setting up auth state listener');
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', { event, userId: session?.user?.id });
+        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -35,7 +39,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', { userId: session?.user?.id });
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -46,6 +52,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const createUserProfile = async (user: User) => {
     try {
+      console.log('Creating/updating user profile for:', user.id);
+      
       const { error } = await supabase
         .from('profiles')
         .upsert({
@@ -56,6 +64,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (error) {
         console.error('Error creating profile:', error);
+      } else {
+        console.log('Profile created/updated successfully');
       }
     } catch (error) {
       console.error('Unexpected error creating profile:', error);
@@ -64,6 +74,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string) => {
     try {
+      console.log('Signing up user:', email);
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
@@ -73,6 +84,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           emailRedirectTo: redirectUrl
         }
       });
+      
+      console.log('Sign up result:', { error });
       return { error };
     } catch (error) {
       console.error('Sign up error:', error);
@@ -82,10 +95,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('Signing in user:', email);
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+      
+      console.log('Sign in result:', { error });
       return { error };
     } catch (error) {
       console.error('Sign in error:', error);
@@ -95,6 +112,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
+      console.log('Signing out user');
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Sign out error:', error);
