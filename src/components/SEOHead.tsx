@@ -20,18 +20,18 @@ export const SEOHead = () => {
       const { data, error } = await supabase
         .from('admin_settings')
         .select('adsense_code, analytics_code')
-        .limit(1)
-        .single();
+        .limit(1);
 
       if (error) {
         console.error('Error loading SEO settings:', error);
         return;
       }
 
-      if (data) {
+      // Use the first row if it exists
+      if (data && data.length > 0) {
         setSettings({
-          adsense_code: data.adsense_code || '',
-          analytics_code: data.analytics_code || ''
+          adsense_code: data[0].adsense_code || '',
+          analytics_code: data[0].analytics_code || ''
         });
       }
     } catch (error) {

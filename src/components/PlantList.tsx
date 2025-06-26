@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { Droplets, Trash2, Calendar } from 'lucide-react';
-import { format, parseISO, isToday, isPast } from 'date-fns';
+import { format, parseISO, isToday, isPast, addDays } from 'date-fns';
 
 interface UserPlant {
   id: string;
@@ -16,6 +17,7 @@ interface UserPlant {
   last_watered: string;
   next_water_date: string;
   photo_url: string;
+  user_id?: string;
 }
 
 interface PlantListProps {
@@ -25,59 +27,106 @@ interface PlantListProps {
 export const PlantList = ({ refreshTrigger }: PlantListProps) => {
   const [plants, setPlants] = useState<UserPlant[]>([]);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     loadPlants();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, user]);
 
   const loadPlants = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('user_plants')
-      .select('*')
-      .order('next_water_date', { ascending: true });
+    
+    if (user) {
+      // Load plants from Supabase for logged-in users
+      const { data, error } = await supabase
+        .from('user_plants')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('next_water_date', { ascending: true });
 
-    if (error) {
-      console.error('Error loading plants:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load your plants.",
-        variant: "destructive",
-      });
+      if (error) {
+        console.error('Error loading plants:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load your plants.",
+          variant: "destructive",
+        });
+      } else {
+        setPlants(data || []);
+      }
     } else {
-      setPlants(data || []);
+      // Load plants from localStorage for guests
+      const localPlantsData = localStorage.getItem('localPlants');
+      if (localPlantsData) {
+        try {
+          const localPlants = JSON.parse(localPlantsData);
+          setPlants(localPlants);
+        } catch (error) {
+          console.error('Error parsing local plants:', error);
+          localStorage.removeItem('localPlants');
+          setPlants([]);
+        }
+      } else {
+        setPlants([]);
+      }
     }
+    
     setLoading(false);
   };
 
   const markAsWatered = async (plantId: string) => {
     const today = new Date().toISOString().split('T')[0];
     
-    const { error: updateError } = await supabase
-      .from('user_plants')
-      .update({ last_watered: today })
-      .eq('id', plantId);
+    if (user) {
+      // Update in Supabase for logged-in users
+      const { error: updateError } = await supabase
+        .from('user_plants')
+        .update({ last_watered: today })
+        .eq('id', plantId);
 
-    if (updateError) {
-      toast({
-        title: "Error",
-        description: "Failed to update watering date.",
-        variant: "destructive",
-      });
-      return;
-    }
+      if (updateError) {
+        toast({
+          title: "Error",
+          description: "Failed to update watering date.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    // Add to watering log
-    const { error: logError } = await supabase
-      .from('watering_logs')
-      .insert({
-        plant_id: plantId,
-        watered_date: today,
-      });
+      // Add to watering log
+      const { error: logError } = await supabase
+        .from('watering_logs')
+        .insert({
+          plant_id: plantId,
+          watered_date: today,
+        });
 
-    if (logError) {
-      console.error('Error adding to watering log:', logError);
+      if (logError) {
+        console.error('Error adding to watering log:', logError);
+      }
+    } else {
+      // Update in localStorage for guests
+      const localPlantsData = localStorage.getItem('localPlants');
+      if (localPlantsData) {
+        try {
+          const localPlants = JSON.parse(localPlantsData);
+          const updatedPlants = localPlants.map((plant: UserPlant) => {
+            if (plant.id === plantId) {
+              const nextWaterDate = addDays(new Date(today), plant.watering_interval_days);
+              return {
+                ...plant,
+                last_watered: today,
+                next_water_date: nextWaterDate.toISOString().split('T')[0]
+              };
+            }
+            return plant;
+          });
+          localStorage.setItem('localPlants', JSON.stringify(updatedPlants));
+        } catch (error) {
+          console.error('Error updating local plants:', error);
+        }
+      }
     }
 
     toast({
@@ -89,27 +138,42 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
   };
 
   const removePlant = async (plantId: string, photoUrl?: string) => {
-    const { error } = await supabase
-      .from('user_plants')
-      .delete()
-      .eq('id', plantId);
+    if (user) {
+      // Remove from Supabase for logged-in users
+      const { error } = await supabase
+        .from('user_plants')
+        .delete()
+        .eq('id', plantId);
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to remove plant.",
-        variant: "destructive",
-      });
-      return;
-    }
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to remove plant.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    // Delete photo from storage if exists
-    if (photoUrl) {
-      const path = photoUrl.split('/').pop();
-      if (path) {
-        await supabase.storage
-          .from('plant-photos')
-          .remove([`plant-photos/${path}`]);
+      // Delete photo from storage if exists
+      if (photoUrl) {
+        const path = photoUrl.split('/').pop();
+        if (path) {
+          await supabase.storage
+            .from('plant-photos')
+            .remove([`plant-photos/${path}`]);
+        }
+      }
+    } else {
+      // Remove from localStorage for guests
+      const localPlantsData = localStorage.getItem('localPlants');
+      if (localPlantsData) {
+        try {
+          const localPlants = JSON.parse(localPlantsData);
+          const updatedPlants = localPlants.filter((plant: UserPlant) => plant.id !== plantId);
+          localStorage.setItem('localPlants', JSON.stringify(updatedPlants));
+        } catch (error) {
+          console.error('Error removing local plant:', error);
+        }
       }
     }
 

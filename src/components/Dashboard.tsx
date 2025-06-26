@@ -23,7 +23,10 @@ export const Dashboard = () => {
   useEffect(() => {
     // Check if user just logged in and has localStorage data to sync
     if (user && localStorage.getItem('localPlants')) {
-      setShowSyncPrompt(true);
+      const localPlants = JSON.parse(localStorage.getItem('localPlants') || '[]');
+      if (localPlants.length > 0) {
+        setShowSyncPrompt(true);
+      }
     }
   }, [user]);
 
@@ -47,7 +50,8 @@ export const Dashboard = () => {
           watering_interval_days: plant.watering_interval_days,
           last_watered: plant.last_watered,
           next_water_date: plant.next_water_date,
-          user_id: user.id
+          user_id: user.id,
+          photo_url: null // Local plants don't have photos
         });
       }
 
@@ -71,51 +75,30 @@ export const Dashboard = () => {
 
   const exportPlantSchedule = async () => {
     try {
-      // Security fix: Only export user's own plants or all plants if admin
-      let query = supabase
-        .from('user_plants')
-        .select('plant_name, scientific_name, watering_interval_days, last_watered, next_water_date')
-        .order('next_water_date');
+      let plants = [];
 
-      // If user is not authenticated, get plants from localStorage
-      if (!user) {
-        const localPlantsData = localStorage.getItem('localPlants');
-        if (!localPlantsData) {
-          toast({
-            title: "No Data",
-            description: "No plants to export.",
-            variant: "destructive",
-          });
-          return;
+      if (user) {
+        // Get user's plants from Supabase
+        const { data, error } = await supabase
+          .from('user_plants')
+          .select('plant_name, scientific_name, watering_interval_days, last_watered, next_water_date')
+          .eq('user_id', user.id)
+          .order('next_water_date');
+
+        if (error) {
+          console.error('Export error:', error);
+          throw error;
         }
-
-        const localPlants = JSON.parse(localPlantsData);
-        const csvContent = [
-          ['Plant Name', 'Scientific Name', 'Watering Interval (Days)', 'Last Watered', 'Next Water Date'].join(','),
-          ...localPlants.map((plant: any) => [
-            `"${(plant.plant_name || '').replace(/"/g, '""')}"`,
-            `"${(plant.scientific_name || '').replace(/"/g, '""')}"`,
-            plant.watering_interval_days || 0,
-            plant.last_watered || '',
-            plant.next_water_date || ''
-          ].join(','))
-        ].join('\n');
-
-        downloadCSV(csvContent);
-        return;
+        plants = data || [];
+      } else {
+        // Get plants from localStorage
+        const localPlantsData = localStorage.getItem('localPlants');
+        if (localPlantsData) {
+          plants = JSON.parse(localPlantsData);
+        }
       }
 
-      // If user is authenticated, only show user's own plants
-      query = query.eq('user_id', user.id);
-
-      const { data: plants, error } = await query;
-
-      if (error) {
-        console.error('Export error:', error);
-        throw error;
-      }
-
-      if (!plants || plants.length === 0) {
+      if (plants.length === 0) {
         toast({
           title: "No Data",
           description: "No plants to export.",
@@ -124,7 +107,7 @@ export const Dashboard = () => {
         return;
       }
 
-      // Create CSV content with proper sanitization
+      // Create CSV content
       const headers = ['Plant Name', 'Scientific Name', 'Watering Interval (Days)', 'Last Watered', 'Next Water Date'];
       const csvContent = [
         headers.join(','),
@@ -137,7 +120,17 @@ export const Dashboard = () => {
         ].join(','))
       ].join('\n');
 
-      downloadCSV(csvContent);
+      // Download CSV
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `plant-schedule-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       toast({
         title: "Export Successful",
@@ -151,19 +144,6 @@ export const Dashboard = () => {
         variant: "destructive",
       });
     }
-  };
-
-  const downloadCSV = (csvContent: string) => {
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `plant-schedule-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
   if (showAdmin) {

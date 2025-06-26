@@ -14,15 +14,17 @@ export const AdsTxt = () => {
       const { data, error } = await supabase
         .from('admin_settings')
         .select('ads_txt')
-        .limit(1)
-        .single();
+        .limit(1);
 
       if (error) {
         console.error('Error loading ads.txt:', error);
         return;
       }
 
-      setAdsTxtContent(data?.ads_txt || '');
+      // Use the first row if it exists
+      if (data && data.length > 0) {
+        setAdsTxtContent(data[0]?.ads_txt || '');
+      }
     } catch (error) {
       console.error('Error loading ads.txt:', error);
     }

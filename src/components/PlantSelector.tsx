@@ -7,7 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { Upload, Plus } from 'lucide-react';
+import { addDays } from 'date-fns';
 
 interface PlantSpecies {
   id: string;
@@ -29,6 +31,7 @@ export const PlantSelector = ({ onPlantAdded }: PlantSelectorProps) => {
   const [photo, setPhoto] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [showCustomForm, setShowCustomForm] = useState(false);
+  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -53,10 +56,8 @@ export const PlantSelector = ({ onPlantAdded }: PlantSelectorProps) => {
   };
 
   const validateFile = (file: File): boolean => {
-    // Enhanced file validation
     const maxSize = 5 * 1024 * 1024; // 5MB limit
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
     
     if (file.size > maxSize) {
       toast({
@@ -76,16 +77,6 @@ export const PlantSelector = ({ onPlantAdded }: PlantSelectorProps) => {
       return false;
     }
 
-    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-    if (!allowedExtensions.includes(fileExtension)) {
-      toast({
-        title: "Invalid File Extension",
-        description: "Please select a valid image file.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
     return true;
   };
 
@@ -99,6 +90,8 @@ export const PlantSelector = ({ onPlantAdded }: PlantSelectorProps) => {
   };
 
   const uploadPhoto = async (file: File): Promise<string | null> => {
+    if (!user) return null; // Only upload photos for logged-in users
+    
     try {
       const fileExt = file.name.split('.').pop()?.toLowerCase();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -185,54 +178,83 @@ export const PlantSelector = ({ onPlantAdded }: PlantSelectorProps) => {
         };
       }
 
-      let photoUrl = null;
-      if (photo) {
-        photoUrl = await uploadPhoto(photo);
-        if (!photoUrl) {
+      const today = new Date().toISOString().split('T')[0];
+      const nextWaterDate = addDays(new Date(today), plantData.watering_interval_days);
+
+      if (user) {
+        // Save to Supabase for logged-in users
+        let photoUrl = null;
+        if (photo) {
+          photoUrl = await uploadPhoto(photo);
+          if (!photoUrl) {
+            toast({
+              title: "Upload Failed",
+              description: "Failed to upload photo. Plant will be added without image.",
+            });
+          }
+        }
+
+        const { error } = await supabase
+          .from('user_plants')
+          .insert({
+            ...plantData,
+            user_id: user.id,
+            photo_url: photoUrl,
+            last_watered: today,
+            next_water_date: nextWaterDate.toISOString().split('T')[0],
+          });
+
+        if (error) {
+          console.error('Error adding plant:', error);
           toast({
-            title: "Upload Failed",
-            description: "Failed to upload photo. Plant will be added without image.",
+            title: "Error Adding Plant",
+            description: error.message || "Failed to add plant. Please try again.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+      } else {
+        // Save to localStorage for guests
+        const newPlant = {
+          id: `local-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+          ...plantData,
+          last_watered: today,
+          next_water_date: nextWaterDate.toISOString().split('T')[0],
+          photo_url: '', // No photo upload for guests
+          created_at: new Date().toISOString(),
+        };
+
+        const existingPlants = JSON.parse(localStorage.getItem('localPlants') || '[]');
+        existingPlants.push(newPlant);
+        localStorage.setItem('localPlants', JSON.stringify(existingPlants));
+
+        if (photo) {
+          toast({
+            title: "Photo Not Saved",
+            description: "Photo uploads are only available for logged-in users. Plant added without photo.",
           });
         }
       }
 
-      const { data: userData } = await supabase.auth.getUser();
-      const { error } = await supabase
-        .from('user_plants')
-        .insert({
-          ...plantData,
-          user_id: userData.user?.id || null,
-          photo_url: photoUrl,
-          last_watered: new Date().toISOString().split('T')[0],
-        });
-
-      if (error) {
-        console.error('Error adding plant:', error);
-        toast({
-          title: "Error Adding Plant",
-          description: error.message || "Failed to add plant. Please try again.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Plant Added!",
-          description: "Your plant has been added successfully.",
-        });
-        
-        // Reset form
-        setSelectedSpecies('');
-        setCustomName('');
-        setCustomScientificName('');
-        setCustomInterval('');
-        setPhoto(null);
-        setShowCustomForm(false);
-        
-        // Reset file input
-        const fileInput = document.getElementById('photo') as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
-        
-        onPlantAdded();
-      }
+      toast({
+        title: "Plant Added!",
+        description: "Your plant has been added successfully.",
+      });
+      
+      // Reset form
+      setSelectedSpecies('');
+      setCustomName('');
+      setCustomScientificName('');
+      setCustomInterval('');
+      setPhoto(null);
+      setShowCustomForm(false);
+      
+      // Reset file input
+      const fileInput = document.getElementById('photo') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+      
+      onPlantAdded();
     } catch (error) {
       console.error('Error adding plant:', error);
       toast({
@@ -329,24 +351,34 @@ export const PlantSelector = ({ onPlantAdded }: PlantSelectorProps) => {
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="photo">Plant Photo (Optional - Max 5MB)</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="photo"
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                onChange={handlePhotoChange}
-                className="flex-1"
-              />
-              <Upload className="h-4 w-4 text-gray-500" />
+          {user && (
+            <div className="space-y-2">
+              <Label htmlFor="photo">Plant Photo (Optional - Max 5MB)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="photo"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handlePhotoChange}
+                  className="flex-1"
+                />
+                <Upload className="h-4 w-4 text-gray-500" />
+              </div>
+              {photo && (
+                <p className="text-sm text-gray-600">
+                  Selected: {photo.name} ({(photo.size / 1024 / 1024).toFixed(2)} MB)
+                </p>
+              )}
             </div>
-            {photo && (
-              <p className="text-sm text-gray-600">
-                Selected: {photo.name} ({(photo.size / 1024 / 1024).toFixed(2)} MB)
+          )}
+
+          {!user && (
+            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-700">
+                💡 <strong>Tip:</strong> Sign up to enable photo uploads and email reminders!
               </p>
-            )}
-          </div>
+            </div>
+          )}
 
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? 'Adding Plant...' : 'Add Plant'}
