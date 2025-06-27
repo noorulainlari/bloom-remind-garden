@@ -41,27 +41,25 @@ const AppContent = () => {
   }, []);
 
   return (
-    <>
+    <BrowserRouter>
       <SEOHead />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/welcome" element={<Index />} />
-          <Route path="/gallery" element={<PlantGallery />} />
-          <Route path="/admin" element={<AdminLogin />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/blog" element={<BlogList />} />
-          <Route path="/blog/:slug" element={<BlogPost />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/privacy-policy" element={<Privacy />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/ads.txt" element={<AdsTxt />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/welcome" element={<Index />} />
+        <Route path="/gallery" element={<PlantGallery />} />
+        <Route path="/admin" element={<AdminLogin />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/blog" element={<BlogList />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/privacy-policy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/ads.txt" element={<AdsTxt />} />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   );
 };
 
