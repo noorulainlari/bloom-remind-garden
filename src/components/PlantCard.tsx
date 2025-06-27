@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Droplets, Trash2, Calendar, CheckCircle, Camera, Leaf, Heart } from 'lucide-react';
+import { Droplets, Trash2, Calendar, CheckCircle, Camera, Leaf, Heart, Share2 } from 'lucide-react';
 import { format, parseISO, isToday, isPast, differenceInDays } from 'date-fns';
 
 interface Plant {
@@ -25,8 +25,21 @@ interface PlantCardProps {
   isWatered?: boolean;
 }
 
+// Rotating plant facts
+const PLANT_FACTS = [
+  "🌱 This plant loves you back when you care for it!",
+  "💧 Proper watering is key to healthy growth.",
+  "🌿 Plants can boost your mood and air quality.",
+  "🌸 Regular care leads to beautiful blooms.",
+  "🍃 Your plant appreciates consistent schedules.",
+  "🌺 Healthy plants = happy homes!",
+  "🌵 Each plant has its own personality and needs.",
+  "🌳 Growing plants is growing happiness!"
+];
+
 export const PlantCard = ({ plant, onWater, onRemove, isWatered = false }: PlantCardProps) => {
   const [showNotes, setShowNotes] = useState(false);
+  const [currentFact] = useState(PLANT_FACTS[Math.floor(Math.random() * PLANT_FACTS.length)]);
   
   const getWaterStatus = () => {
     const date = parseISO(plant.next_water_date);
@@ -71,10 +84,10 @@ export const PlantCard = ({ plant, onWater, onRemove, isWatered = false }: Plant
 
   const getProgressColor = () => {
     switch (waterStatus.status) {
-      case 'overdue': return 'bg-red-500';
-      case 'due': return 'bg-yellow-500';
-      case 'due-soon': return 'bg-orange-500';
-      default: return 'bg-green-500';
+      case 'overdue': return 'bg-gradient-to-r from-red-500 to-red-400';
+      case 'due': return 'bg-gradient-to-r from-yellow-500 to-orange-400';
+      case 'due-soon': return 'bg-gradient-to-r from-orange-500 to-yellow-400';
+      default: return 'bg-gradient-to-r from-green-500 to-emerald-400';
     }
   };
 
@@ -85,124 +98,157 @@ export const PlantCard = ({ plant, onWater, onRemove, isWatered = false }: Plant
     if (name.includes('succulent')) return '🪴';
     if (name.includes('herb') || name.includes('basil') || name.includes('mint')) return '🌿';
     if (name.includes('tree') || name.includes('ficus')) return '🌳';
+    if (name.includes('flower')) return '🌸';
+    if (name.includes('lily')) return '🌺';
     return '🌱';
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: `My ${plant.custom_name || plant.plant_name}`,
+        text: `Check out my plant! I water it every ${plant.watering_interval_days} days.`,
+        url: window.location.href
+      });
+    } else {
+      // Fallback to copying to clipboard
+      const shareText = `My ${plant.custom_name || plant.plant_name} - I water it every ${plant.watering_interval_days} days! 🌱`;
+      navigator.clipboard.writeText(shareText);
+    }
   };
 
   return (
     <Card className={`
-      transition-all duration-500 shadow-lg hover:shadow-xl plant-card
-      ${isWatered || wasRecentlyWatered ? 'watered-card animate-pulse-glow' : ''}
+      transition-all duration-500 shadow-lg hover:shadow-2xl plant-card transform hover:scale-102
+      ${isWatered || wasRecentlyWatered ? 'watered-card animate-pulse-glow bg-gradient-to-br from-green-100 via-green-50 to-emerald-100 border-green-400' : ''}
       ${waterStatus.urgent ? 'ring-2 ring-orange-300 shadow-orange-100' : ''}
+      rounded-2xl overflow-hidden backdrop-blur-sm
     `}>
-      <CardHeader className="pb-3 relative">
-        <div className="absolute top-2 right-2">
-          <div className="text-2xl animate-gentle-float">{getPlantEmoji()}</div>
+      <CardHeader className="pb-3 relative bg-gradient-to-r from-green-50 to-emerald-50">
+        <div className="absolute top-3 right-3 flex gap-2">
+          <div className="text-2xl animate-gentle-float drop-shadow-sm">{getPlantEmoji()}</div>
+          <Button
+            onClick={handleShare}
+            size="sm"
+            variant="ghost"
+            className="text-green-600 hover:text-green-700 hover:bg-green-100 p-1 h-8 w-8"
+          >
+            <Share2 className="h-4 w-4" />
+          </Button>
         </div>
         
-        <div className="flex justify-between items-start gap-2 pr-12">
+        <div className="flex justify-between items-start gap-2 pr-20">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg sm:text-xl text-green-800 truncate flex items-center gap-2">
+            <CardTitle className="text-lg sm:text-xl text-green-800 truncate flex items-center gap-2 font-bold">
               <Leaf className="h-5 w-5 text-green-600 animate-leaf-sway" />
               {plant.custom_name || plant.plant_name}
             </CardTitle>
             {plant.scientific_name && (
-              <p className="text-sm text-green-600 italic truncate">{plant.scientific_name}</p>
+              <p className="text-sm text-green-600 italic truncate font-medium">{plant.scientific_name}</p>
             )}
           </div>
         </div>
         
-        {/* Progress Bar */}
-        <div className="mt-3">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-xs text-green-700 font-medium">Watering Progress</span>
-            <Badge variant={waterStatus.variant} className="text-xs whitespace-nowrap">
+        {/* Enhanced Progress Bar */}
+        <div className="mt-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-xs text-green-700 font-semibold">Watering Progress</span>
+            <Badge variant={waterStatus.variant} className="text-xs whitespace-nowrap px-3 py-1 rounded-full font-medium shadow-sm">
               {waterStatus.text}
             </Badge>
           </div>
-          <div className="w-full bg-green-100 rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-green-100 rounded-full h-3 overflow-hidden shadow-inner border border-green-200">
             <div 
-              className={`h-full transition-all duration-1000 ${getProgressColor()}`}
+              className={`h-full transition-all duration-1000 ${getProgressColor()} shadow-sm animate-pulse`}
               style={{ width: `${Math.min(100, waterStatus.progress)}%` }}
             />
           </div>
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 p-6">
         {plant.photo_url ? (
           <div className="relative group">
             <img
               src={plant.photo_url}
               alt={plant.custom_name || plant.plant_name}
-              className="w-full h-32 sm:h-40 object-cover rounded-lg shadow-md transition-transform duration-300 group-hover:scale-105"
+              className="w-full h-40 sm:h-48 object-cover rounded-xl shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl"
+              loading="lazy"
             />
-            <div className="absolute top-2 right-2 bg-white/90 rounded-full p-1 backdrop-blur-sm">
+            <div className="absolute top-3 right-3 bg-white/90 rounded-full p-2 backdrop-blur-sm shadow-md">
               <Camera className="h-4 w-4 text-green-600" />
             </div>
             {(isWatered || wasRecentlyWatered) && (
-              <div className="absolute inset-0 bg-green-500/20 rounded-lg flex items-center justify-center">
-                <div className="bg-white/90 rounded-full p-2 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-green-500/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <div className="bg-white/95 rounded-full p-3 backdrop-blur-sm shadow-lg animate-bounce">
                   <CheckCircle className="h-8 w-8 text-green-600" />
                 </div>
               </div>
             )}
           </div>
         ) : (
-          <div className="w-full h-32 sm:h-40 garden-gradient rounded-lg flex items-center justify-center shadow-inner relative overflow-hidden">
-            <div className="text-4xl sm:text-5xl animate-gentle-float">{getPlantEmoji()}</div>
-            <div className="absolute inset-0 leaf-pattern opacity-30" />
+          <div className="w-full h-40 sm:h-48 garden-gradient rounded-xl flex items-center justify-center shadow-inner relative overflow-hidden border-2 border-green-200">
+            <div className="text-5xl sm:text-6xl animate-gentle-float drop-shadow-lg">{getPlantEmoji()}</div>
+            <div className="absolute inset-0 leaf-pattern opacity-40" />
             {(isWatered || wasRecentlyWatered) && (
-              <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
-                <CheckCircle className="h-8 w-8 text-green-600 bg-white rounded-full" />
+              <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center backdrop-blur-sm">
+                <div className="bg-white/95 rounded-full p-3 shadow-lg animate-bounce">
+                  <CheckCircle className="h-8 w-8 text-green-600" />
+                </div>
               </div>
             )}
           </div>
         )}
         
         <div className="space-y-3 text-sm">
-          <div className="flex items-center gap-2 text-green-700">
+          <div className="flex items-center gap-2 text-green-700 p-2 bg-green-50 rounded-lg">
             <Calendar className="h-4 w-4 flex-shrink-0" />
-            <span className="truncate">Last: {format(parseISO(plant.last_watered), 'MMM dd, yyyy')}</span>
+            <span className="truncate font-medium">Last: {format(parseISO(plant.last_watered), 'MMM dd, yyyy')}</span>
           </div>
           
-          <div className="flex items-center gap-2 text-blue-600">
+          <div className="flex items-center gap-2 text-blue-600 p-2 bg-blue-50 rounded-lg">
             <Droplets className="h-4 w-4 flex-shrink-0" />
-            <span className="truncate">Next: {format(parseISO(plant.next_water_date), 'MMM dd, yyyy')}</span>
+            <span className="truncate font-medium">Next: {format(parseISO(plant.next_water_date), 'MMM dd, yyyy')}</span>
           </div>
           
-          <div className="text-green-600 font-medium flex items-center gap-1">
-            <Heart className="h-4 w-4 text-red-500" />
-            Every {plant.watering_interval_days} day{plant.watering_interval_days === 1 ? '' : 's'}
+          <div className="text-green-600 font-medium flex items-center gap-2 p-2 bg-emerald-50 rounded-lg">
+            <Heart className="h-4 w-4 text-red-500 animate-pulse" />
+            <span>Every {plant.watering_interval_days} day{plant.watering_interval_days === 1 ? '' : 's'}</span>
           </div>
 
           {(isWatered || wasRecentlyWatered) && (
-            <div className="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded-lg border border-green-200">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-medium">
+            <div className="flex items-center gap-2 text-green-700 bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border-2 border-green-200 shadow-inner">
+              <CheckCircle className="h-5 w-5 text-green-600 animate-pulse" />
+              <span className="text-sm font-semibold">
                 {plant.last_watered_timestamp ? 
-                  `Watered today at ${new Date(plant.last_watered_timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` :
-                  'Watered today ✅'
+                  `💧 Watered today at ${new Date(plant.last_watered_timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` :
+                  '💧 Watered today ✅'
                 }
               </span>
             </div>
           )}
         </div>
 
-        <div className="flex gap-2 pt-2">
+        {/* Plant Fact */}
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-3 rounded-xl border border-yellow-200">
+          <p className="text-sm text-orange-700 font-medium text-center">{currentFact}</p>
+        </div>
+
+        <div className="flex gap-3 pt-2">
           <Button
             onClick={() => onWater(plant.id)}
             size="sm"
-            className="flex-1 garden-button transition-all duration-300"
+            className="flex-1 garden-button transition-all duration-300 py-3 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl"
             disabled={isWatered}
           >
             {isWatered ? (
               <>
-                <CheckCircle className="h-4 w-4 mr-1" />
+                <CheckCircle className="h-4 w-4 mr-2" />
                 Watered! 🌿
               </>
             ) : (
               <>
-                <Droplets className="h-4 w-4 mr-1" />
+                <Droplets className="h-4 w-4 mr-2" />
                 💧 Water Plant
               </>
             )}
@@ -211,7 +257,7 @@ export const PlantCard = ({ plant, onWater, onRemove, isWatered = false }: Plant
             onClick={() => onRemove(plant.id, plant.photo_url)}
             size="sm"
             variant="destructive"
-            className="flex-shrink-0 hover:scale-105 transition-transform duration-200"
+            className="flex-shrink-0 hover:scale-105 transition-transform duration-200 p-3 rounded-xl shadow-lg hover:shadow-xl"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
