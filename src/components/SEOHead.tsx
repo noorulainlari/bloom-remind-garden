@@ -1,61 +1,103 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export const SEOHead = () => {
-  const [settings, setSettings] = useState<{
-    adsense_code: string;
-    analytics_code: string;
-  }>({
-    adsense_code: '',
-    analytics_code: ''
-  });
+  const location = useLocation();
 
   useEffect(() => {
-    loadSettings();
-  }, []);
+    // Base meta tags
+    const defaultTitle = "Plant Water Reminder – Care Tracker for Your Plants";
+    const defaultDescription = "Free online plant watering reminder tool. Set reminders for indoor plants, succulents, herbs, and more. Upload photos, get email alerts, and grow a healthy garden.";
+    const defaultImage = "https://plantwaterreminder.com/og-image.jpg";
 
-  const loadSettings = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('admin_settings')
-        .select('adsense_code, analytics_code')
-        .limit(1);
+    // Update title based on route
+    let title = defaultTitle;
+    let description = defaultDescription;
 
-      if (error) {
-        console.error('Error loading SEO settings:', error);
-        return;
+    switch (location.pathname) {
+      case '/gallery':
+        title = "Plant Gallery – Beautiful Plant Photos | Plant Water Reminder";
+        description = "Browse beautiful plant photos shared by our community. Get inspiration for your own plant collection and care tips.";
+        break;
+      case '/blog':
+        title = "Plant Care Blog – Tips & Guides | Plant Water Reminder";
+        description = "Expert plant care tips, watering guides, and growing advice. Learn how to keep your plants healthy and thriving.";
+        break;
+      case '/about':
+        title = "About Us – Plant Water Reminder Tool";
+        description = "Learn about our mission to help plant lovers keep their green friends healthy with smart watering reminders and care tracking.";
+        break;
+      case '/contact':
+        title = "Contact Us – Plant Water Reminder Support";
+        description = "Get in touch with our plant care team. Questions, feedback, or suggestions welcome.";
+        break;
+    }
+
+    // Update document title
+    document.title = title;
+
+    // Update meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', description);
+    }
+
+    // Update Open Graph tags
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) {
+      ogTitle.setAttribute('content', title);
+    }
+
+    const ogDescription = document.querySelector('meta[property="og:description"]');
+    if (ogDescription) {
+      ogDescription.setAttribute('content', description);
+    }
+
+    // Update Twitter Card tags
+    const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+    if (twitterTitle) {
+      twitterTitle.setAttribute('content', title);
+    }
+
+    const twitterDescription = document.querySelector('meta[name="twitter:description"]');
+    if (twitterDescription) {
+      twitterDescription.setAttribute('content', description);
+    }
+
+    // Add structured data for better SEO
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Plant Water Reminder",
+      "description": description,
+      "url": "https://plantwaterreminder.com",
+      "applicationCategory": "LifestyleApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "Plant Water Reminder"
       }
+    };
 
-      // Use the first row if it exists
-      if (data && data.length > 0) {
-        setSettings({
-          adsense_code: data[0].adsense_code || '',
-          analytics_code: data[0].analytics_code || ''
-        });
-      }
-    } catch (error) {
-      console.error('Error loading SEO settings:', error);
-    }
-  };
-
-  useEffect(() => {
-    // Inject AdSense code
-    if (settings.adsense_code && !document.querySelector('[data-adsense-injected]')) {
-      const adsenseScript = document.createElement('div');
-      adsenseScript.innerHTML = settings.adsense_code;
-      adsenseScript.setAttribute('data-adsense-injected', 'true');
-      document.head.appendChild(adsenseScript);
+    // Remove existing structured data
+    const existingScript = document.querySelector('script[type="application/ld+json"]');
+    if (existingScript) {
+      existingScript.remove();
     }
 
-    // Inject Analytics code
-    if (settings.analytics_code && !document.querySelector('[data-analytics-injected]')) {
-      const analyticsScript = document.createElement('div');
-      analyticsScript.innerHTML = settings.analytics_code;
-      analyticsScript.setAttribute('data-analytics-injected', 'true');
-      document.head.appendChild(analyticsScript);
-    }
-  }, [settings]);
+    // Add new structured data
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify(structuredData);
+    document.head.appendChild(script);
+
+  }, [location.pathname]);
 
   return null;
 };
