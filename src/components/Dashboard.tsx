@@ -7,10 +7,15 @@ import { AuthForm } from './AuthForm';
 import { Footer } from './Footer';
 import { GardenQuote } from './GardenQuote';
 import { SoundToggle } from './SoundToggle';
+import { PlantAchievements } from './PlantAchievements';
+import { WateringCalendar } from './WateringCalendar';
+import { PlantInsights } from './PlantInsights';
+import { ThemeToggle } from './ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Download, X, Upload, FileDown, FileUp, Leaf, Users, Heart } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Download, X, Upload, FileDown, FileUp, Leaf, Users, Heart, Calendar, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -35,10 +40,14 @@ export const Dashboard = () => {
   const [showAuth, setShowAuth] = useState(false);
   const [showSyncPrompt, setShowSyncPrompt] = useState(false);
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [plants, setPlants] = useState<UserPlant[]>([]);
   const [loading, setLoading] = useState(false);
   const [wateredPlants, setWateredPlants] = useState<Set<string>>(new Set());
   const [lastVisit, setLastVisit] = useState<string>('');
+  const [wateredCount, setWateredCount] = useState(0);
+  const [streakDays, setStreakDays] = useState(0);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -180,6 +189,16 @@ export const Dashboard = () => {
     // Add to watered plants for visual feedback
     setWateredPlants(prev => new Set([...prev, plantId]));
 
+    // Update watered count
+    const newWateredCount = wateredCount + 1;
+    setWateredCount(newWateredCount);
+    localStorage.setItem('wateredCount', newWateredCount.toString());
+    
+    // Update streak (simplified logic)
+    const newStreakDays = streakDays + 1;
+    setStreakDays(newStreakDays);
+    localStorage.setItem('streakDays', newStreakDays.toString());
+
     toast({
       title: "🌱 Plant Watered!",
       description: `Watered today at ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`,
@@ -318,16 +337,18 @@ export const Dashboard = () => {
         return;
       }
 
-      // Create CSV content
-      const headers = ['Plant Name', 'Scientific Name', 'Watering Interval (Days)', 'Last Watered', 'Next Water Date'];
+      // Enhanced CSV export with more details
+      const headers = ['Plant Name', 'Scientific Name', 'Custom Name', 'Watering Interval (Days)', 'Last Watered', 'Next Water Date', 'Photo URL'];
       const csvContent = [
         headers.join(','),
         ...plants.map(plant => [
           `"${(plant.plant_name || '').replace(/"/g, '""')}"`,
           `"${(plant.scientific_name || '').replace(/"/g, '""')}"`,
+          `"${(plant.custom_name || '').replace(/"/g, '""')}"`,
           plant.watering_interval_days || 0,
           plant.last_watered || '',
-          plant.next_water_date || ''
+          plant.next_water_date || '',
+          plant.photo_url ? 'Yes' : 'No'
         ].join(','))
       ].join('\n');
 
@@ -419,6 +440,11 @@ export const Dashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex flex-col leaf-pattern">
       <Header onAdminToggle={setShowAdmin} onAuthToggle={setShowAuth} />
       
+      {/* Theme Toggle */}
+      <div className="fixed top-4 right-16 z-40">
+        <ThemeToggle />
+      </div>
+
       {/* Welcome Back Message */}
       {lastVisit && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
@@ -514,6 +540,43 @@ export const Dashboard = () => {
               </Card>
             </div>
 
+            {/* Insights and Calendar Toggle Buttons */}
+            <div className="flex flex-wrap gap-2 justify-center">
+              <Button
+                onClick={() => setShowInsights(!showInsights)}
+                variant="outline"
+                className="border-green-300 hover:bg-green-50"
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
+                {showInsights ? 'Hide' : 'Show'} Insights
+              </Button>
+              <Button
+                onClick={() => setShowCalendar(!showCalendar)}
+                variant="outline"
+                className="border-green-300 hover:bg-green-50"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                {showCalendar ? 'Hide' : 'Show'} Calendar
+              </Button>
+            </div>
+
+            {/* Insights Section */}
+            {showInsights && (
+              <PlantInsights plants={plants} wateredCount={wateredCount} />
+            )}
+
+            {/* Calendar Section */}
+            {showCalendar && (
+              <WateringCalendar plants={plants} />
+            )}
+
+            {/* Achievements */}
+            <PlantAchievements 
+              plantCount={plants.length} 
+              wateredCount={wateredCount} 
+              streakDays={streakDays} 
+            />
+
             {/* Main Content Grid */}
             <div className="grid gap-8 lg:grid-cols-3">
               <div className="lg:col-span-1">
@@ -564,7 +627,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* SEO Content Section */}
+            {/* Enhanced SEO Content Section */}
             <section className="bg-gradient-to-r from-green-100 to-blue-100 rounded-2xl p-8 sm:p-12 mt-16 shadow-lg border border-green-200 leaf-pattern">
               <div className="max-w-4xl mx-auto text-center space-y-6">
                 <h2 className="text-3xl sm:text-4xl font-bold text-green-800 mb-6">
@@ -618,6 +681,10 @@ export const Dashboard = () => {
                     <li>✅ <strong>Photo Upload & Storage</strong> - Track your plants visually</li>
                     <li>✅ <strong>Export/Import Features</strong> - Backup and share your data</li>
                     <li>✅ <strong>Mobile Responsive</strong> - Works perfectly on all devices</li>
+                    <li>✅ <strong>Achievement System</strong> - Gamified plant care experience</li>
+                    <li>✅ <strong>Calendar View</strong> - Visual watering schedule management</li>
+                    <li>✅ <strong>Plant Insights</strong> - Track your gardening progress</li>
+                    <li>✅ <strong>Dark Mode Support</strong> - Easy on the eyes day or night</li>
                   </ul>
                 </div>
               </div>
@@ -628,6 +695,42 @@ export const Dashboard = () => {
       
       <Footer />
       <SoundToggle />
+
+      {/* Auth Form Dialog */}
+      {showAuth && (
+        <Dialog open={showAuth} onOpenChange={setShowAuth}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="sr-only">Authentication</DialogTitle>
+            </DialogHeader>
+            <AuthForm onSuccess={() => setShowAuth(false)} />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Sync Prompt Dialog */}
+      {showSyncPrompt && (
+        <Dialog open={showSyncPrompt} onOpenChange={setShowSyncPrompt}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-green-800">Sync Your Plants</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-green-700">
+                We found plants saved locally on your device. Would you like to sync them to your account?
+              </p>
+              <div className="flex gap-3">
+                <Button onClick={syncLocalStorageToSupabase} className="flex-1">
+                  Yes, Sync Plants
+                </Button>
+                <Button onClick={() => setShowSyncPrompt(false)} variant="outline" className="flex-1">
+                  Maybe Later
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
