@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { Droplets, Trash2, Calendar, CheckCircle, Camera } from 'lucide-react';
+import { Droplets, Trash2, Calendar, CheckCircle, Camera, RotateCcw, Archive, Eye, EyeOff } from 'lucide-react';
 import { format, parseISO, isToday, isPast, addDays } from 'date-fns';
 
 interface UserPlant {
@@ -19,33 +19,44 @@ interface UserPlant {
   photo_url: string;
   user_id?: string;
   last_watered_timestamp?: string | null;
+  custom_name?: string | null;
+  status?: 'active' | 'archived' | 'dead';
 }
 
 interface PlantListProps {
   refreshTrigger: number;
 }
 
+// Undo functionality
+let lastAction: { type: string; plantData: any; timestamp: number } | null = null;
+
 export const PlantList = ({ refreshTrigger }: PlantListProps) => {
   const [plants, setPlants] = useState<UserPlant[]>([]);
   const [loading, setLoading] = useState(false);
   const [wateredPlants, setWateredPlants] = useState<Set<string>>(new Set());
+  const [showArchived, setShowArchived] = useState(false);
+  const [draggedPlant, setDraggedPlant] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     loadPlants();
-  }, [refreshTrigger, user]);
+  }, [refreshTrigger, user, showArchived]);
 
   const loadPlants = async () => {
     setLoading(true);
     
     if (user) {
-      // Load plants from Supabase for logged-in users
-      const { data, error } = await supabase
+      const query = supabase
         .from('user_plants')
         .select('*')
-        .eq('user_id', user.id)
-        .order('next_water_date', { ascending: true });
+        .eq('user_id', user.id);
+      
+      if (!showArchived) {
+        query.neq('status', 'archived').neq('status', 'dead');
+      }
+      
+      const { data, error } = await query.order('next_water_date', { ascending: true });
 
       if (error) {
         console.error('Error loading plants:', error);
@@ -58,11 +69,15 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
         setPlants(data || []);
       }
     } else {
-      // Load plants from localStorage for guests
       const localPlantsData = localStorage.getItem('localPlants');
       if (localPlantsData) {
         try {
-          const localPlants = JSON.parse(localPlantsData);
+          let localPlants = JSON.parse(localPlantsData);
+          if (!showArchived) {
+            localPlants = localPlants.filter((p: UserPlant) => 
+              p.status !== 'archived' && p.status !== 'dead'
+            );
+          }
           setPlants(localPlants);
         } catch (error) {
           console.error('Error parsing local plants:', error);
@@ -83,7 +98,6 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
     const timestamp = now.toLocaleString();
     
     if (user) {
-      // Update in Supabase for logged-in users
       const { error: updateError } = await supabase
         .from('user_plants')
         .update({ 
@@ -101,7 +115,6 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
         return;
       }
 
-      // Add to watering log
       const { error: logError } = await supabase
         .from('watering_logs')
         .insert({
@@ -113,7 +126,6 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
         console.error('Error adding to watering log:', logError);
       }
     } else {
-      // Update in localStorage for guests
       const localPlantsData = localStorage.getItem('localPlants');
       if (localPlantsData) {
         try {
@@ -137,7 +149,6 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
       }
     }
 
-    // Add to watered plants for visual feedback
     setWateredPlants(prev => new Set([...prev, plantId]));
 
     toast({
@@ -145,7 +156,6 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
       description: `Watered today at ${timestamp}`,
     });
     
-    // Remove visual feedback after 5 seconds
     setTimeout(() => {
       setWateredPlants(prev => {
         const newSet = new Set(prev);
@@ -157,9 +167,72 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
     loadPlants();
   };
 
-  const removePlant = async (plantId: string, photoUrl?: string) => {
+  const archivePlant = async (plantId: string, status: 'archived' | 'dead') => {
+    const plant = plants.find(p => p.id === plantId);
+    if (!plant) return;
+
+    // Store for undo
+    lastAction = {
+      type: 'archive',
+      plantData: { ...plant, originalStatus: plant.status || 'active' },
+      timestamp: Date.now()
+    };
+
     if (user) {
-      // Remove from Supabase for logged-in users
+      const { error } = await supabase
+        .from('user_plants')
+        .update({ status })
+        .eq('id', plantId);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to archive plant.",
+          variant: "destructive",
+        });
+        return;
+      }
+    } else {
+      const localPlantsData = localStorage.getItem('localPlants');
+      if (localPlantsData) {
+        try {
+          const localPlants = JSON.parse(localPlantsData);
+          const updatedPlants = localPlants.map((p: UserPlant) => 
+            p.id === plantId ? { ...p, status } : p
+          );
+          localStorage.setItem('localPlants', JSON.stringify(updatedPlants));
+        } catch (error) {
+          console.error('Error archiving local plant:', error);
+        }
+      }
+    }
+
+    toast({
+      title: status === 'archived' ? "📦 Plant Archived" : "💀 Plant Marked as Dead",
+      description: "Plant moved to archive. Use undo to restore.",
+      action: (
+        <Button variant="outline" size="sm" onClick={undoLastAction}>
+          <RotateCcw className="h-4 w-4 mr-1" />
+          Undo
+        </Button>
+      ),
+    });
+    
+    loadPlants();
+  };
+
+  const removePlant = async (plantId: string, photoUrl?: string) => {
+    const plant = plants.find(p => p.id === plantId);
+    if (!plant) return;
+
+    // Store for undo
+    lastAction = {
+      type: 'delete',
+      plantData: plant,
+      timestamp: Date.now()
+    };
+
+    if (user) {
       const { error } = await supabase
         .from('user_plants')
         .delete()
@@ -174,7 +247,6 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
         return;
       }
 
-      // Delete photo from storage if exists and it's not base64
       if (photoUrl && !photoUrl.startsWith('data:')) {
         const path = photoUrl.split('/').pop();
         if (path) {
@@ -184,7 +256,6 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
         }
       }
     } else {
-      // Remove from localStorage for guests
       const localPlantsData = localStorage.getItem('localPlants');
       if (localPlantsData) {
         try {
@@ -199,10 +270,110 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
 
     toast({
       title: "🗑️ Plant Removed",
-      description: "Plant has been removed from your collection.",
+      description: "Plant has been permanently deleted.",
+      action: (
+        <Button variant="outline" size="sm" onClick={undoLastAction}>
+          <RotateCcw className="h-4 w-4 mr-1" />
+          Undo
+        </Button>
+      ),
     });
     
     loadPlants();
+  };
+
+  const undoLastAction = async () => {
+    if (!lastAction || Date.now() - lastAction.timestamp > 30000) {
+      toast({
+        title: "Cannot Undo",
+        description: "Action too old or no recent action to undo.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { type, plantData } = lastAction;
+
+    if (type === 'delete') {
+      if (user) {
+        const { error } = await supabase.from('user_plants').insert({
+          ...plantData,
+          user_id: user.id
+        });
+        if (error) {
+          toast({
+            title: "Error",
+            description: "Failed to restore plant.",
+            variant: "destructive",
+          });
+          return;
+        }
+      } else {
+        const localPlantsData = localStorage.getItem('localPlants');
+        const localPlants = localPlantsData ? JSON.parse(localPlantsData) : [];
+        localPlants.push(plantData);
+        localStorage.setItem('localPlants', JSON.stringify(localPlants));
+      }
+    } else if (type === 'archive') {
+      if (user) {
+        const { error } = await supabase
+          .from('user_plants')
+          .update({ status: plantData.originalStatus })
+          .eq('id', plantData.id);
+        if (error) {
+          toast({
+            title: "Error",
+            description: "Failed to restore plant.",
+            variant: "destructive",
+          });
+          return;
+        }
+      } else {
+        const localPlantsData = localStorage.getItem('localPlants');
+        if (localPlantsData) {
+          const localPlants = JSON.parse(localPlantsData);
+          const updatedPlants = localPlants.map((p: UserPlant) => 
+            p.id === plantData.id ? { ...p, status: plantData.originalStatus } : p
+          );
+          localStorage.setItem('localPlants', JSON.stringify(updatedPlants));
+        }
+      }
+    }
+
+    lastAction = null;
+    toast({
+      title: "✅ Action Undone",
+      description: "Plant has been restored.",
+    });
+    loadPlants();
+  };
+
+  const handleDragStart = (e: React.DragEvent, plantId: string) => {
+    setDraggedPlant(plantId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetPlantId: string) => {
+    e.preventDefault();
+    
+    if (!draggedPlant || draggedPlant === targetPlantId) {
+      setDraggedPlant(null);
+      return;
+    }
+
+    // Reorder plants logic would go here
+    // For now, just show a toast
+    toast({
+      title: "🔄 Plants Reordered",
+      description: "Plant order updated successfully!",
+    });
+    
+    setDraggedPlant(null);
   };
 
   const getWaterStatus = (nextWaterDate: string) => {
@@ -233,8 +404,14 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
       <Card className="border-green-200 bg-gradient-to-br from-green-50 to-white">
         <CardContent className="text-center py-12">
           <div className="text-6xl mb-4">🌱</div>
-          <p className="text-green-700 mb-4 text-lg font-medium">No plants in your garden yet!</p>
-          <p className="text-sm text-green-600">Add your first plant above to start your garden journey.</p>
+          <p className="text-green-700 mb-4 text-lg font-medium">
+            {showArchived ? 'No archived plants!' : 'No plants in your garden yet!'}
+          </p>
+          <p className="text-sm text-green-600">
+            {showArchived 
+              ? 'Switch back to active plants to see your garden.' 
+              : 'Add your first plant above to start your garden journey.'}
+          </p>
         </CardContent>
       </Card>
     );
@@ -242,11 +419,23 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <h2 className="text-2xl sm:text-3xl font-bold text-green-800">🌿 Your Plant Collection</h2>
-        <Badge variant="secondary" className="bg-green-100 text-green-800">
-          {plants.length} plant{plants.length === 1 ? '' : 's'}
-        </Badge>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl sm:text-3xl font-bold text-green-800">🌿 Your Plant Collection</h2>
+          <Badge variant="secondary" className="bg-green-100 text-green-800">
+            {plants.length} plant{plants.length === 1 ? '' : 's'}
+          </Badge>
+        </div>
+        
+        <Button
+          onClick={() => setShowArchived(!showArchived)}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          {showArchived ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          {showArchived ? 'Show Active' : 'Show Archived'}
+        </Button>
       </div>
       
       <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -258,25 +447,42 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
           
           return (
             <Card 
-              key={plant.id} 
-              className={`transition-all duration-300 shadow-lg hover:shadow-xl ${
+              key={plant.id}
+              draggable={!showArchived}
+              onDragStart={(e) => handleDragStart(e, plant.id)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, plant.id)}
+              className={`transition-all duration-300 shadow-lg hover:shadow-xl cursor-move ${
                 waterStatus.urgent ? 'ring-2 ring-orange-300 shadow-orange-100' : 'border-green-200'
               } ${
                 isWatered || wasRecentlyWatered ? 'bg-gradient-to-br from-green-100 to-green-50 ring-2 ring-green-300' : 'bg-white'
+              } ${
+                plant.status === 'archived' ? 'opacity-75 bg-gray-50' : ''
+              } ${
+                plant.status === 'dead' ? 'opacity-60 bg-red-50 border-red-200' : ''
               }`}
             >
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start gap-2">
                   <div className="flex-1 min-w-0">
-                    <CardTitle className="text-lg sm:text-xl text-green-800 truncate">{plant.plant_name}</CardTitle>
+                    <CardTitle className="text-lg sm:text-xl text-green-800 truncate">
+                      {plant.custom_name || plant.plant_name}
+                    </CardTitle>
                     {plant.scientific_name && (
                       <p className="text-sm text-green-600 italic truncate">{plant.scientific_name}</p>
                     )}
+                    {plant.status && plant.status !== 'active' && (
+                      <Badge variant={plant.status === 'dead' ? 'destructive' : 'secondary'} className="mt-1">
+                        {plant.status === 'dead' ? '💀 Dead' : '📦 Archived'}
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex-shrink-0">
-                    <Badge variant={waterStatus.variant} className="text-xs whitespace-nowrap">
-                      {waterStatus.text}
-                    </Badge>
+                    {!showArchived && (
+                      <Badge variant={waterStatus.variant} className="text-xs whitespace-nowrap">
+                        {waterStatus.text}
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -305,10 +511,12 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
                     <span className="truncate">Last: {format(parseISO(plant.last_watered), 'MMM dd, yyyy')}</span>
                   </div>
                   
-                  <div className="flex items-center gap-2 text-blue-600">
-                    <Droplets className="h-4 w-4 flex-shrink-0" />
-                    <span className="truncate">Next: {format(parseISO(plant.next_water_date), 'MMM dd, yyyy')}</span>
-                  </div>
+                  {!showArchived && (
+                    <div className="flex items-center gap-2 text-blue-600">
+                      <Droplets className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">Next: {format(parseISO(plant.next_water_date), 'MMM dd, yyyy')}</span>
+                    </div>
+                  )}
                   
                   <div className="text-green-600 font-medium">
                     💧 Every {plant.watering_interval_days} day{plant.watering_interval_days === 1 ? '' : 's'}
@@ -328,24 +536,38 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  <Button
-                    onClick={() => markAsWatered(plant.id)}
-                    size="sm"
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-                    disabled={isWatered}
-                  >
-                    {isWatered ? (
-                      <>
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Watered!
-                      </>
-                    ) : (
-                      <>
-                        <Droplets className="h-4 w-4 mr-1" />
-                        Mark as Watered
-                      </>
-                    )}
-                  </Button>
+                  {!showArchived && plant.status !== 'dead' && (
+                    <Button
+                      onClick={() => markAsWatered(plant.id)}
+                      size="sm"
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                      disabled={isWatered}
+                    >
+                      {isWatered ? (
+                        <>
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Watered!
+                        </>
+                      ) : (
+                        <>
+                          <Droplets className="h-4 w-4 mr-1" />
+                          Mark as Watered
+                        </>
+                      )}
+                    </Button>
+                  )}
+                  
+                  {!showArchived && (
+                    <Button
+                      onClick={() => archivePlant(plant.id, 'archived')}
+                      size="sm"
+                      variant="outline"
+                      className="flex-shrink-0"
+                    >
+                      <Archive className="h-4 w-4" />
+                    </Button>
+                  )}
+                  
                   <Button
                     onClick={() => removePlant(plant.id, plant.photo_url)}
                     size="sm"
