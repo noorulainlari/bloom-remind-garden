@@ -23,28 +23,44 @@ export const PlantTooltip = ({ content, children }: PlantTooltipProps) => {
 };
 
 export const PlantTooltips = {
-  WateringInterval: () => (
-    <PlantTooltip content="How often your plant needs water. This varies by plant type, season, and environment. Adjust based on your plant's specific needs." />
+  WateringInterval: ({ children }: { children?: React.ReactNode }) => (
+    <PlantTooltip content="How often your plant needs water. This varies by plant type, season, and environment. Adjust based on your plant's specific needs.">
+      {children}
+    </PlantTooltip>
   ),
-  PhotoUpload: () => (
-    <PlantTooltip content="Upload photos to track your plant's growth over time. Photos help you remember which plant is which and monitor their health!" />
+  PhotoUpload: ({ children }: { children?: React.ReactNode }) => (
+    <PlantTooltip content="Upload photos to track your plant's growth over time. Photos help you remember which plant is which and monitor their health!">
+      {children}
+    </PlantTooltip>
   ),
-  LastWatered: () => (
-    <PlantTooltip content="The last date you watered this plant. This helps calculate when to water next and track your watering history." />
+  LastWatered: ({ children }: { children?: React.ReactNode }) => (
+    <PlantTooltip content="The last date you watered this plant. This helps calculate when to water next and track your watering history.">
+      {children}
+    </PlantTooltip>
   ),
-  PlantName: () => (
-    <PlantTooltip content="Give your plant a custom nickname or use its common/scientific name. This helps you identify it easily in your collection." />
+  PlantName: ({ children }: { children?: React.ReactNode }) => (
+    <PlantTooltip content="Give your plant a custom nickname or use its common/scientific name. This helps you identify it easily in your collection.">
+      {children}
+    </PlantTooltip>
   ),
-  WaterNow: () => (
-    <PlantTooltip content="Mark this plant as watered right now. This will update the watering schedule and reset the countdown timer." />
+  WaterNow: ({ children }: { children?: React.ReactNode }) => (
+    <PlantTooltip content="Mark this plant as watered right now. This will update the watering schedule and reset the countdown timer.">
+      {children}
+    </PlantTooltip>
   ),
-  PlaySounds: () => (
-    <PlantTooltip content="Play relaxing nature sounds while you tend to your plants. Choose from birds, wind, or rain sounds." />
+  PlaySounds: ({ children }: { children?: React.ReactNode }) => (
+    <PlantTooltip content="Play relaxing nature sounds while you tend to your plants. Choose from birds, wind, or rain sounds.">
+      {children}
+    </PlantTooltip>
   ),
-  PauseSounds: () => (
-    <PlantTooltip content="Pause the ambient sounds. Your sound preference will be saved for next time." />
+  PauseSounds: ({ children }: { children?: React.ReactNode }) => (
+    <PlantTooltip content="Pause the ambient sounds. Your sound preference will be saved for next time.">
+      {children}
+    </PlantTooltip>
   ),
-  StopSounds: () => (
-    <PlantTooltip content="Stop the ambient sounds completely. You can start them again anytime." />
+  StopSounds: ({ children }: { children?: React.ReactNode }) => (
+    <PlantTooltip content="Stop the ambient sounds completely. You can start them again anytime.">
+      {children}
+    </PlantTooltip>
   ),
 };
