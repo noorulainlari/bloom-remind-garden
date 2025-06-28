@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { PlantSelector } from './PlantSelector';
 import { PlantList } from './PlantList';
-import { BackgroundSounds } from './BackgroundSounds';
+import { SoundSettings } from './SoundSettings';
 import { GardenerRank } from './GardenerRank';
 import { RandomPlantTip } from './RandomPlantTip';
 import { PWAInstall } from './PWAInstall';
@@ -48,9 +48,6 @@ export const Dashboard = () => {
           </p>
         </div>
 
-        {/* Background Sounds */}
-        <BackgroundSounds />
-
         {/* Gardener Rank */}
         <GardenerRank refreshTrigger={refreshTrigger} />
 
@@ -70,6 +67,9 @@ export const Dashboard = () => {
 
         {/* PWA Install Prompt */}
         <PWAInstall />
+
+        {/* Sound Settings - Fixed position */}
+        <SoundSettings />
 
         {/* SEO Content */}
         <div className="mt-16 bg-white/80 backdrop-blur rounded-xl p-8 shadow-lg border border-green-200">
