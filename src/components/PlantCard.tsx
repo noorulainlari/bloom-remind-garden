@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,20 +8,19 @@ import { format, parseISO, isToday, isPast, differenceInDays } from 'date-fns';
 interface Plant {
   id: string;
   plant_name: string;
-  scientific_name: string;
+  scientific_name?: string;
   watering_interval_days: number;
   last_watered: string;
   next_water_date: string;
-  photo_url: string;
+  photo_url?: string;
   custom_name?: string;
   last_watered_timestamp?: string | null;
 }
 
 interface PlantCardProps {
   plant: Plant;
-  onWater: (plantId: string) => void;
-  onRemove: (plantId: string, photoUrl?: string) => void;
-  isWatered?: boolean;
+  onUpdate?: () => void;
+  actions?: React.ReactNode;
 }
 
 // Rotating plant facts
@@ -37,7 +35,7 @@ const PLANT_FACTS = [
   "🌳 Growing plants is growing happiness!"
 ];
 
-export const PlantCard = ({ plant, onWater, onRemove, isWatered = false }: PlantCardProps) => {
+export const PlantCard = ({ plant, onUpdate, actions }: PlantCardProps) => {
   const [showNotes, setShowNotes] = useState(false);
   const [currentFact] = useState(PLANT_FACTS[Math.floor(Math.random() * PLANT_FACTS.length)]);
   
@@ -118,12 +116,7 @@ export const PlantCard = ({ plant, onWater, onRemove, isWatered = false }: Plant
   };
 
   return (
-    <Card className={`
-      transition-all duration-500 shadow-lg hover:shadow-2xl plant-card transform hover:scale-102
-      ${isWatered || wasRecentlyWatered ? 'watered-card animate-pulse-glow bg-gradient-to-br from-green-100 via-green-50 to-emerald-100 border-green-400' : ''}
-      ${waterStatus.urgent ? 'ring-2 ring-orange-300 shadow-orange-100' : ''}
-      rounded-2xl overflow-hidden backdrop-blur-sm
-    `}>
+    <Card className="transition-all duration-500 shadow-lg hover:shadow-2xl plant-card transform hover:scale-102 rounded-2xl overflow-hidden backdrop-blur-sm">
       <CardHeader className="pb-3 relative bg-gradient-to-r from-green-50 to-emerald-50">
         <div className="absolute top-3 right-3 flex gap-2">
           <div className="text-2xl animate-gentle-float drop-shadow-sm">{getPlantEmoji()}</div>
@@ -178,25 +171,11 @@ export const PlantCard = ({ plant, onWater, onRemove, isWatered = false }: Plant
             <div className="absolute top-3 right-3 bg-white/90 rounded-full p-2 backdrop-blur-sm shadow-md">
               <Camera className="h-4 w-4 text-green-600" />
             </div>
-            {(isWatered || wasRecentlyWatered) && (
-              <div className="absolute inset-0 bg-green-500/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                <div className="bg-white/95 rounded-full p-3 backdrop-blur-sm shadow-lg animate-bounce">
-                  <CheckCircle className="h-8 w-8 text-green-600" />
-                </div>
-              </div>
-            )}
           </div>
         ) : (
           <div className="w-full h-40 sm:h-48 garden-gradient rounded-xl flex items-center justify-center shadow-inner relative overflow-hidden border-2 border-green-200">
             <div className="text-5xl sm:text-6xl animate-gentle-float drop-shadow-lg">{getPlantEmoji()}</div>
             <div className="absolute inset-0 leaf-pattern opacity-40" />
-            {(isWatered || wasRecentlyWatered) && (
-              <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center backdrop-blur-sm">
-                <div className="bg-white/95 rounded-full p-3 shadow-lg animate-bounce">
-                  <CheckCircle className="h-8 w-8 text-green-600" />
-                </div>
-              </div>
-            )}
           </div>
         )}
         
@@ -216,7 +195,7 @@ export const PlantCard = ({ plant, onWater, onRemove, isWatered = false }: Plant
             <span>Every {plant.watering_interval_days} day{plant.watering_interval_days === 1 ? '' : 's'}</span>
           </div>
 
-          {(isWatered || wasRecentlyWatered) && (
+          {wasRecentlyWatered && (
             <div className="flex items-center gap-2 text-green-700 bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border-2 border-green-200 shadow-inner">
               <CheckCircle className="h-5 w-5 text-green-600 animate-pulse" />
               <span className="text-sm font-semibold">
@@ -234,34 +213,11 @@ export const PlantCard = ({ plant, onWater, onRemove, isWatered = false }: Plant
           <p className="text-sm text-orange-700 font-medium text-center">{currentFact}</p>
         </div>
 
-        <div className="flex gap-3 pt-2">
-          <Button
-            onClick={() => onWater(plant.id)}
-            size="sm"
-            className="flex-1 garden-button transition-all duration-300 py-3 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl"
-            disabled={isWatered}
-          >
-            {isWatered ? (
-              <>
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Watered! 🌿
-              </>
-            ) : (
-              <>
-                <Droplets className="h-4 w-4 mr-2" />
-                💧 Water Plant
-              </>
-            )}
-          </Button>
-          <Button
-            onClick={() => onRemove(plant.id, plant.photo_url)}
-            size="sm"
-            variant="destructive"
-            className="flex-shrink-0 hover:scale-105 transition-transform duration-200 p-3 rounded-xl shadow-lg hover:shadow-xl"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
+        {actions && (
+          <div className="flex gap-3 pt-2">
+            {actions}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
