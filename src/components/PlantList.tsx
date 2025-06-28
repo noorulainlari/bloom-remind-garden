@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -164,7 +165,7 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
         .insert({
           user_id: user.id,
           plant_name: plant.plant_name,
-          scientific_name: plant.scientific_name,
+          scientific_name: plant.scientific_name || null,
           custom_name: `${plant.custom_name || plant.plant_name} (Copy)`,
           watering_interval_days: plant.watering_interval_days,
           next_water_date: new Date().toISOString().split('T')[0],
@@ -330,7 +331,6 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
                                 </div>
                                 
                                 <PlantCard
-                                  key={plant.id}
                                   plant={plant}
                                   onUpdate={loadPlants}
                                   actions={

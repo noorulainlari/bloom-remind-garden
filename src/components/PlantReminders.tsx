@@ -12,11 +12,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { addDays, format, parseISO, isToday, isPast } from 'date-fns';
 
+type ReminderType = 'fertilizing' | 'pruning' | 'misting' | 'rotating' | 'repotting';
+
 interface PlantReminder {
   id: string;
   plant_id: string;
   plant_name: string;
-  reminder_type: 'fertilizing' | 'pruning' | 'misting' | 'rotating' | 'repotting';
+  reminder_type: ReminderType;
   interval_days: number;
   last_completed: string;
   next_due_date: string;
@@ -33,13 +35,13 @@ const REMINDER_TYPES = {
   misting: { icon: Droplets, label: '💨 Misting', color: 'blue' },
   rotating: { icon: RotateCw, label: '🔄 Rotating', color: 'purple' },
   repotting: { icon: Plus, label: '🪴 Repotting', color: 'green' }
-};
+} as const;
 
 export const PlantReminders = ({ userPlants }: PlantRemindersProps) => {
   const [reminders, setReminders] = useState<PlantReminder[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedPlantId, setSelectedPlantId] = useState('');
-  const [reminderType, setReminderType] = useState<keyof typeof REMINDER_TYPES>('fertilizing');
+  const [reminderType, setReminderType] = useState<ReminderType>('fertilizing');
   const [intervalDays, setIntervalDays] = useState(30);
   const [lastCompleted, setLastCompleted] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
@@ -71,7 +73,8 @@ export const PlantReminders = ({ userPlants }: PlantRemindersProps) => {
         const plant = userPlants.find(p => p.id === reminder.plant_id);
         return {
           ...reminder,
-          plant_name: plant ? (plant.custom_name || plant.plant_name) : 'Unknown Plant'
+          plant_name: plant ? (plant.custom_name || plant.plant_name) : 'Unknown Plant',
+          reminder_type: reminder.reminder_type as ReminderType
         };
       });
 
@@ -261,7 +264,7 @@ export const PlantReminders = ({ userPlants }: PlantRemindersProps) => {
 
                 <div className="space-y-2">
                   <Label>Reminder Type</Label>
-                  <Select value={reminderType} onValueChange={(value: keyof typeof REMINDER_TYPES) => setReminderType(value)}>
+                  <Select value={reminderType} onValueChange={(value: ReminderType) => setReminderType(value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -362,7 +365,7 @@ export const PlantReminders = ({ userPlants }: PlantRemindersProps) => {
                         <Button
                           onClick={() => deleteReminder(reminder.id)}
                           size="sm"
-                          variant="destructive"
+          variant="destructive"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
