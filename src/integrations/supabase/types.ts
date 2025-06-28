@@ -81,6 +81,53 @@ export type Database = {
         }
         Relationships: []
       }
+      plant_reminders: {
+        Row: {
+          created_at: string
+          id: string
+          interval_days: number
+          last_completed: string
+          next_due_date: string
+          notes: string | null
+          plant_id: string | null
+          reminder_type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interval_days?: number
+          last_completed?: string
+          next_due_date: string
+          notes?: string | null
+          plant_id?: string | null
+          reminder_type: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interval_days?: number
+          last_completed?: string
+          next_due_date?: string
+          notes?: string | null
+          plant_id?: string | null
+          reminder_type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plant_reminders_plant_id_fkey"
+            columns: ["plant_id"]
+            isOneToOne: false
+            referencedRelation: "user_plants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plant_species: {
         Row: {
           created_at: string | null
@@ -168,36 +215,45 @@ export type Database = {
       user_plants: {
         Row: {
           created_at: string | null
+          custom_name: string | null
           id: string
           last_watered: string | null
+          last_watered_timestamp: string | null
           next_water_date: string
           photo_url: string | null
           plant_name: string
           scientific_name: string | null
+          status: string | null
           updated_at: string | null
           user_id: string | null
           watering_interval_days: number
         }
         Insert: {
           created_at?: string | null
+          custom_name?: string | null
           id?: string
           last_watered?: string | null
+          last_watered_timestamp?: string | null
           next_water_date: string
           photo_url?: string | null
           plant_name: string
           scientific_name?: string | null
+          status?: string | null
           updated_at?: string | null
           user_id?: string | null
           watering_interval_days: number
         }
         Update: {
           created_at?: string | null
+          custom_name?: string | null
           id?: string
           last_watered?: string | null
+          last_watered_timestamp?: string | null
           next_water_date?: string
           photo_url?: string | null
           plant_name?: string
           scientific_name?: string | null
+          status?: string | null
           updated_at?: string | null
           user_id?: string | null
           watering_interval_days?: number

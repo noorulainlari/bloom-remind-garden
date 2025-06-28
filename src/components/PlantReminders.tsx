@@ -53,22 +53,31 @@ export const PlantReminders = ({ userPlants }: PlantRemindersProps) => {
   const loadReminders = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('plant_reminders')
-      .select(`
-        *,
-        user_plants!plant_id (plant_name)
-      `)
-      .eq('user_id', user.id)
-      .order('next_due_date');
+    try {
+      // First get all reminders for this user
+      const { data: reminderData, error } = await supabase
+        .from('plant_reminders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('next_due_date');
 
-    if (error) {
+      if (error) {
+        console.error('Error loading reminders:', error);
+        return;
+      }
+
+      // Then enrich with plant names from userPlants prop
+      const enrichedReminders = (reminderData || []).map(reminder => {
+        const plant = userPlants.find(p => p.id === reminder.plant_id);
+        return {
+          ...reminder,
+          plant_name: plant ? (plant.custom_name || plant.plant_name) : 'Unknown Plant'
+        };
+      });
+
+      setReminders(enrichedReminders);
+    } catch (error) {
       console.error('Error loading reminders:', error);
-    } else {
-      setReminders(data?.map(r => ({
-        ...r,
-        plant_name: r.user_plants?.plant_name || 'Unknown Plant'
-      })) || []);
     }
   };
 
@@ -80,93 +89,120 @@ export const PlantReminders = ({ userPlants }: PlantRemindersProps) => {
 
     const nextDueDate = addDays(new Date(lastCompleted), intervalDays);
 
-    const { error } = await supabase
-      .from('plant_reminders')
-      .insert({
-        plant_id: selectedPlantId,
-        user_id: user.id,
-        reminder_type: reminderType,
-        interval_days: intervalDays,
-        last_completed: lastCompleted,
-        next_due_date: nextDueDate.toISOString().split('T')[0],
-        notes: notes || null
+    try {
+      const { error } = await supabase
+        .from('plant_reminders')
+        .insert({
+          plant_id: selectedPlantId,
+          user_id: user.id,
+          reminder_type: reminderType,
+          interval_days: intervalDays,
+          last_completed: lastCompleted,
+          next_due_date: nextDueDate.toISOString().split('T')[0],
+          notes: notes || null
+        });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to add reminder.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "🔔 Reminder Added!",
+        description: `${REMINDER_TYPES[reminderType].label} reminder set for ${selectedPlant.custom_name || selectedPlant.plant_name}`,
       });
 
-    if (error) {
+      // Reset form
+      setSelectedPlantId('');
+      setReminderType('fertilizing');
+      setIntervalDays(30);
+      setLastCompleted(new Date().toISOString().split('T')[0]);
+      setNotes('');
+      setShowAddForm(false);
+      
+      loadReminders();
+    } catch (error) {
+      console.error('Error adding reminder:', error);
       toast({
         title: "Error",
         description: "Failed to add reminder.",
         variant: "destructive",
       });
-      return;
     }
-
-    toast({
-      title: "🔔 Reminder Added!",
-      description: `${REMINDER_TYPES[reminderType].label} reminder set for ${selectedPlant.plant_name}`,
-    });
-
-    // Reset form
-    setSelectedPlantId('');
-    setReminderType('fertilizing');
-    setIntervalDays(30);
-    setLastCompleted(new Date().toISOString().split('T')[0]);
-    setNotes('');
-    setShowAddForm(false);
-    
-    loadReminders();
   };
 
   const markAsCompleted = async (reminder: PlantReminder) => {
     const today = new Date().toISOString().split('T')[0];
     const nextDueDate = addDays(new Date(today), reminder.interval_days);
 
-    const { error } = await supabase
-      .from('plant_reminders')
-      .update({
-        last_completed: today,
-        next_due_date: nextDueDate.toISOString().split('T')[0]
-      })
-      .eq('id', reminder.id);
+    try {
+      const { error } = await supabase
+        .from('plant_reminders')
+        .update({
+          last_completed: today,
+          next_due_date: nextDueDate.toISOString().split('T')[0]
+        })
+        .eq('id', reminder.id);
 
-    if (error) {
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to update reminder.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "✅ Task Completed!",
+        description: `${REMINDER_TYPES[reminder.reminder_type].label} completed for ${reminder.plant_name}`,
+      });
+
+      loadReminders();
+    } catch (error) {
+      console.error('Error updating reminder:', error);
       toast({
         title: "Error",
         description: "Failed to update reminder.",
         variant: "destructive",
       });
-      return;
     }
-
-    toast({
-      title: "✅ Task Completed!",
-      description: `${REMINDER_TYPES[reminder.reminder_type].label} completed for ${reminder.plant_name}`,
-    });
-
-    loadReminders();
   };
 
   const deleteReminder = async (reminderId: string) => {
-    const { error } = await supabase
-      .from('plant_reminders')
-      .delete()
-      .eq('id', reminderId);
+    try {
+      const { error } = await supabase
+        .from('plant_reminders')
+        .delete()
+        .eq('id', reminderId);
 
-    if (error) {
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to delete reminder.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "🗑️ Reminder Deleted",
+        description: "Reminder has been removed.",
+      });
+
+      loadReminders();
+    } catch (error) {
+      console.error('Error deleting reminder:', error);
       toast({
         title: "Error",
         description: "Failed to delete reminder.",
         variant: "destructive",
       });
-      return;
     }
-
-    toast({
-      title: "🗑️ Reminder Deleted",
-      description: "Reminder has been removed.",
-    });
-
-    loadReminders();
   };
 
   const getReminderStatus = (nextDueDate: string) => {
