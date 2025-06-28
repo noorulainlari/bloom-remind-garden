@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +11,7 @@ interface Plant {
   plant_name: string;
   scientific_name?: string;
   watering_interval_days: number;
-  last_watered: string;
+  last_watered?: string;
   next_water_date: string;
   photo_url?: string;
   custom_name?: string;
