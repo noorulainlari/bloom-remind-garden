@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -14,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { ThemeToggle } from './ThemeToggle';
 
 const navigationItems = [
   { path: '/', label: 'Home', icon: Home },
@@ -54,14 +54,18 @@ export const Navigation = () => {
             </Link>
           ))}
           
-          {user && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg">
-              <User className="h-5 w-5 text-green-600" />
-              <span className="text-sm font-semibold text-green-800">
-                {user.email?.split('@')[0]}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            
+            {user && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900 rounded-lg">
+                <User className="h-5 w-5 text-green-600" />
+                <span className="text-sm font-semibold text-green-800 dark:text-green-200">
+                  {user.email?.split('@')[0]}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 
@@ -72,14 +76,17 @@ export const Navigation = () => {
           <h1 className="text-lg font-bold text-green-700">Plant Care</h1>
         </div>
         
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="text-green-700"
-        >
-          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </Button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="text-green-700"
+          >
+            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </Button>
+        </div>
       </nav>
 
       {/* Mobile Menu Overlay */}
