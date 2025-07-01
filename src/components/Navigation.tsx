@@ -8,7 +8,7 @@ import {
   User, 
   Menu, 
   X,
-  Gallery,
+  Image,
   BookOpen,
   Contact
 } from 'lucide-react';
@@ -17,7 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const navigationItems = [
   { path: '/', label: 'Home', icon: Home },
-  { path: '/gallery', label: 'Gallery', icon: Gallery },
+  { path: '/gallery', label: 'Gallery', icon: Image },
   { path: '/blog', label: 'Blog', icon: BookOpen },
   { path: '/about', label: 'About', icon: Contact },
 ];
