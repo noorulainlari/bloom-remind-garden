@@ -1,121 +1,56 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 
-interface OnboardingStep {
-  id: string;
-  title: string;
-  description: string;
-  target: string;
-  position?: 'top' | 'bottom' | 'left' | 'right';
-}
-
-const ONBOARDING_STEPS: OnboardingStep[] = [
-  {
-    id: 'welcome',
-    title: 'Welcome to Plant Care Tracker! 🌱',
-    description: 'Let\'s take a quick tour to help you get started with caring for your plants.',
-    target: 'body',
-    position: 'bottom'
-  },
-  {
-    id: 'add-plant',
-    title: 'Add Your First Plant',
-    description: 'Click this button to add your first plant. You can search our database or add custom plants.',
-    target: '[data-tour="add-plant-fab"]',
-    position: 'left'
-  },
-  {
-    id: 'plant-search',
-    title: 'Search Plants',
-    description: 'Start typing to search our database of 100+ plants with pre-configured care schedules.',
-    target: '[data-tour="plant-search"]',
-    position: 'bottom'
-  },
-  {
-    id: 'watering-reminders',
-    title: 'Smart Reminders',
-    description: 'Each plant card shows when to water next and tracks your watering history.',
-    target: '[data-tour="plant-card"]',
-    position: 'top'
-  },
-  {
-    id: 'sound-settings',
-    title: 'Ambient Sounds',
-    description: 'Enjoy relaxing nature sounds while caring for your plants.',
-    target: '[data-tour="sound-settings"]',
-    position: 'top'
-  }
-];
-
 interface OnboardingContextType {
-  isActive: boolean;
+  isOnboardingActive: boolean;
   currentStep: number;
-  steps: OnboardingStep[];
+  totalSteps: number;
   startOnboarding: () => void;
   nextStep: () => void;
-  prevStep: () => void;
   skipOnboarding: () => void;
-  isCompleted: boolean;
+  isLastStep: boolean;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
 export const OnboardingProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isActive, setIsActive] = useState(false);
+  // Don't automatically start onboarding
+  const [isOnboardingActive, setIsOnboardingActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [isCompleted, setIsCompleted] = useState(false);
-
-  useEffect(() => {
-    const completed = localStorage.getItem('onboarding-completed');
-    if (!completed) {
-      // Start onboarding for first-time users after a short delay
-      setTimeout(() => setIsActive(true), 1000);
-    } else {
-      setIsCompleted(true);
-    }
-  }, []);
+  const totalSteps = 5;
 
   const startOnboarding = () => {
-    setIsActive(true);
+    setIsOnboardingActive(true);
     setCurrentStep(0);
   };
 
   const nextStep = () => {
-    if (currentStep < ONBOARDING_STEPS.length - 1) {
-      setCurrentStep(currentStep + 1);
+    if (currentStep < totalSteps - 1) {
+      setCurrentStep(prev => prev + 1);
     } else {
-      completeOnboarding();
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      skipOnboarding();
     }
   };
 
   const skipOnboarding = () => {
-    completeOnboarding();
-  };
-
-  const completeOnboarding = () => {
-    setIsActive(false);
-    setIsCompleted(true);
+    setIsOnboardingActive(false);
+    setCurrentStep(0);
     localStorage.setItem('onboarding-completed', 'true');
   };
 
+  const isLastStep = currentStep === totalSteps - 1;
+
   return (
     <OnboardingContext.Provider value={{
-      isActive,
+      isOnboardingActive,
       currentStep,
-      steps: ONBOARDING_STEPS,
+      totalSteps,
       startOnboarding,
       nextStep,
-      prevStep,
       skipOnboarding,
-      isCompleted
+      isLastStep
     }}>
-      {children}  
+      {children}
     </OnboardingContext.Provider>
   );
 };
@@ -123,7 +58,7 @@ export const OnboardingProvider = ({ children }: { children: React.ReactNode }) 
 export const useOnboarding = () => {
   const context = useContext(OnboardingContext);
   if (!context) {
-    throw new Error('useOnboarding must be used within OnboardingProvider');
+    throw new Error('useOnboarding must be used within an OnboardingProvider');
   }
   return context;
 };

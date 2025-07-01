@@ -8,14 +8,19 @@ import { PlantReminders } from './PlantReminders';
 import { FloatingActionButton } from './FloatingActionButton';
 import { Navigation } from './Navigation';
 import { PlantSelector } from './PlantSelector';
+import { SoundSettings } from './SoundSettings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useOnboarding } from '@/hooks/useOnboarding';
+import { Play } from 'lucide-react';
 
 export const Dashboard = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [userPlants, setUserPlants] = useState([]);
   const { user } = useAuth();
+  const { startOnboarding } = useOnboarding();
 
   const handlePlantAdded = () => {
     setRefreshTrigger(prev => prev + 1);
@@ -46,13 +51,23 @@ export const Dashboard = () => {
 
       <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Header Section */}
-        <div className="text-center space-y-4">
+        <div data-tour="welcome" className="text-center space-y-4">
           <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
             🌱 Plant Water Reminder
           </h1>
           <p className="text-lg text-green-700 max-w-2xl mx-auto dark:text-green-300">
             Never forget to water your plants again! Track your plant care schedule with our smart reminder system.
           </p>
+          
+          {/* Onboarding Start Button */}
+          <Button 
+            onClick={startOnboarding}
+            className="garden-button mt-4"
+            size="sm"
+          >
+            <Play className="h-4 w-4 mr-2" />
+            Take Tour
+          </Button>
         </div>
 
         {/* User Welcome Section */}
@@ -76,7 +91,7 @@ export const Dashboard = () => {
 
         {/* Add Plant Section - Main Interface */}
         {user && (
-          <Card className="plant-card shadow-lg">
+          <Card data-tour="add-plant" className="plant-card shadow-lg">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-green-800 flex items-center gap-3 dark:text-green-200">
                 🌱 Add New Plant
@@ -156,6 +171,9 @@ export const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Sound Settings - Fixed Position */}
+      <SoundSettings />
 
       {/* Floating Action Button */}
       <FloatingActionButton onPlantAdded={handlePlantAdded} />

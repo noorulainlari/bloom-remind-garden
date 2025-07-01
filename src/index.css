@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -65,63 +66,65 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-size: 18px; /* Increased base font size */
-    font-weight: 600; /* Made text bolder */
+    font-size: 16px;
+    font-weight: 500;
   }
   
   /* Improve text visibility globally */
   h1, h2, h3, h4, h5, h6 {
-    font-weight: 800 !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    font-weight: 700 !important;
   }
   
   p, span, div {
-    font-weight: 600;
+    font-weight: 500;
   }
   
   .text-sm {
-    font-size: 1rem !important;
-    font-weight: 700 !important;
-  }
-  
-  .text-xs {
     font-size: 0.9rem !important;
-    font-weight: 700 !important;
+    font-weight: 600 !important;
   }
   
   .text-base {
-    font-size: 1.2rem !important;
-    font-weight: 700 !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
   }
   
   .text-lg {
-    font-size: 1.35rem !important;
-    font-weight: 800 !important;
+    font-size: 1.125rem !important;
+    font-weight: 600 !important;
   }
   
   .text-xl {
-    font-size: 1.5rem !important;
-    font-weight: 800 !important;
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
   }
   
   .text-2xl {
-    font-size: 1.8rem !important;
-    font-weight: 900 !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
   }
   
   .text-3xl {
-    font-size: 2.2rem !important;
-    font-weight: 900 !important;
+    font-size: 1.875rem !important;
+    font-weight: 800 !important;
   }
   
   .text-4xl {
-    font-size: 2.8rem !important;
-    font-weight: 900 !important;
+    font-size: 2.25rem !important;
+    font-weight: 800 !important;
   }
 }
 
 /* Enhanced Garden Theme Styles */
 @layer components {
+  .garden-background {
+    @apply bg-gradient-to-br from-green-50 via-white to-emerald-50;
+  }
+
+  .dark .garden-background {
+    @apply bg-gradient-to-br from-gray-900 via-green-950 to-gray-900;
+  }
+
   .garden-gradient {
     @apply bg-gradient-to-br from-green-100 via-emerald-50 to-green-200;
   }
@@ -131,13 +134,13 @@
   }
 
   .plant-card {
-    @apply bg-white border border-green-200 shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl;
-    background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+    @apply bg-white/95 border border-green-200 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl backdrop-blur-sm;
+    background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,244,0.95) 100%);
   }
 
   .dark .plant-card {
-    @apply bg-green-900 border-green-700;
-    background: linear-gradient(135deg, #14532d 0%, #166534 100%);
+    @apply bg-green-900/90 border-green-700;
+    background: linear-gradient(135deg, rgba(20,83,45,0.9) 0%, rgba(22,101,52,0.9) 100%);
   }
 
   .watered-card {
@@ -150,9 +153,8 @@
   }
 
   .garden-button {
-    @apply bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105;
-    font-weight: 800 !important;
-    font-size: 1.15rem !important;
+    @apply bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300;
+    font-weight: 600 !important;
   }
 
   .dark .garden-button {
@@ -180,42 +182,13 @@
   50% { transform: translateY(-10px) rotate(2deg); }
 }
 
-@keyframes leaf-sway {
-  0%, 100% { transform: rotate(-2deg); }
-  50% { transform: rotate(2deg); }
-}
-
 @keyframes gentle-glow {
   0% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
   100% { box-shadow: 0 0 30px rgba(34, 197, 94, 0.5); }
 }
 
-@keyframes pulse-glow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
-}
-
-@keyframes shimmer {
-  0% { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
-}
-
 .animate-gentle-float {
   animation: gentle-float 3s ease-in-out infinite;
-}
-
-.animate-leaf-sway {
-  animation: leaf-sway 2s ease-in-out infinite;
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
-.animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-  background-size: 1000px 100%;
-  animation: shimmer 2s infinite;
 }
 
 /* Mobile-First Responsive Design */
@@ -226,49 +199,28 @@
   
   .garden-button {
     @apply text-base px-4 py-3;
-    font-weight: 800 !important;
+    font-weight: 600 !important;
   }
   
   h1 {
     @apply text-3xl;
-    font-weight: 900 !important;
+    font-weight: 800 !important;
   }
   
   h2 {
     @apply text-2xl;
-    font-weight: 800 !important;
-  }
-  
-  /* Make text more visible on mobile */
-  body {
-    font-size: 19px !important;
-  }
-  
-  .text-sm {
-    font-size: 1.1rem !important;
-  }
-  
-  .text-base {
-    font-size: 1.25rem !important;
-  }
-}
-
-@media (min-width: 641px) and (max-width: 1024px) {
-  .plant-card {
-    @apply p-5;
+    font-weight: 700 !important;
   }
   
   body {
-    font-size: 18px;
+    font-size: 16px !important;
   }
 }
 
 /* Enhanced Accessibility */
 @media (prefers-reduced-motion: reduce) {
   .animate-gentle-float,
-  .animate-leaf-sway,
-  .animate-pulse-glow,
-  .animate-shimmer {
+  .animate-gentle-glow {
     animation: none;
   }
   
@@ -284,38 +236,9 @@
   @apply outline-2 outline-green-500 outline-offset-2;
 }
 
-/* Print styles */
-@media print {
-  .sound-toggle,
-  .garden-button,
-  .plant-card button {
-    display: none;
-  }
-  
-  .plant-card {
-    @apply border border-gray-300 shadow-none;
-    break-inside: avoid;
-  }
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-  .plant-card {
-    @apply border-4 border-black;
-  }
-  
-  .garden-button {
-    @apply border-4 border-black;
-  }
-  
-  body {
-    font-weight: 800 !important;
-  }
-}
-
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -342,37 +265,6 @@
   @apply bg-green-500;
 }
 
-/* Loading skeleton styles */
-.skeleton {
-  @apply bg-green-100 animate-pulse rounded;
-}
-
-.dark .skeleton {
-  @apply bg-green-800;
-}
-
-/* Tooltip enhancements */
-.tooltip-content {
-  @apply bg-green-800 text-white border-green-600 text-base max-w-xs;
-  font-weight: 700 !important;
-}
-
-.dark .tooltip-content {
-  @apply bg-green-200 text-green-900 border-green-400;
-  font-weight: 700 !important;
-}
-
-/* Button text visibility improvements */
-button {
-  font-weight: 700 !important;
-}
-
-/* Badge text improvements */
-.badge {
-  font-weight: 800 !important;
-  font-size: 1rem !important;
-}
-
 /* Mobile Navigation Spacing */
 @media (max-width: 1024px) {
   .pb-20 {
@@ -380,130 +272,12 @@ button {
   }
 }
 
-/* Floating Action Button */
-.floating-fab {
-  position: fixed;
-  bottom: 100px;
-  right: 24px;
-  z-index: 50;
+/* Button text visibility improvements */
+button {
+  font-weight: 600 !important;
 }
 
-@media (max-width: 1024px) {
-  .floating-fab {
-    bottom: 80px;
-  }
-}
-
-/* Navigation improvements */
-.nav-mobile-overlay {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
-}
-
-/* Smooth transitions for mobile menu */
-.mobile-menu-enter {
-  opacity: 0;
-  transform: translateY(-20px);
-}
-
-.mobile-menu-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 300ms, transform 300ms;
-}
-
-.mobile-menu-exit {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.mobile-menu-exit-active {
-  opacity: 0;
-  transform: translateY(-20px);
-  transition: opacity 300ms, transform 300ms;
-}
-
-/* Dark mode enhancements */
-.dark .garden-gradient {
-  @apply bg-gradient-to-br from-green-900 via-emerald-900 to-green-800;
-}
-
-.dark .plant-card {
-  @apply bg-green-900 border-green-700;
-  background: linear-gradient(135deg, #14532d 0%, #166534 100%);
-}
-
-.dark .watered-card {
-  @apply bg-gradient-to-br from-green-800 to-green-700 border-green-500;
-}
-
-.dark .garden-button {
-  @apply from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600;
-}
-
-.dark .leaf-pattern {
-  background-image: 
-    radial-gradient(circle at 20% 80%, rgba(34, 197, 94, 0.1) 0%, transparent 30%),
-    radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 30%),
-    radial-gradient(circle at 40% 40%, rgba(59, 130, 246, 0.05) 0%, transparent 30%);
-}
-
-/* Onboarding highlight effect */
-.onboarding-highlight {
-  position: relative;
-  z-index: 99;
-  border-radius: 8px;
-  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.5), 0 0 20px rgba(34, 197, 94, 0.3);
-  animation: onboarding-pulse 2s ease-in-out infinite;
-}
-
-@keyframes onboarding-pulse {
-  0%, 100% { 
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.5), 0 0 20px rgba(34, 197, 94, 0.3); 
-  }
-  50% { 
-    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.3), 0 0 30px rgba(34, 197, 94, 0.5); 
-  }
-}
-
-/* Night mode specific adjustments */
-.dark {
-  /* Softer backgrounds for night viewing */
-  --background: 222.2 84% 2.9%;
-  --card: 222.2 84% 3.9%;
-  --popover: 222.2 84% 3.9%;
-}
-
-.dark .garden-background {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-}
-
-/* Reduce brightness for night mode */
-.dark img {
-  filter: brightness(0.9);
-}
-
-.dark .text-green-800 {
-  @apply text-green-300;
-}
-
-.dark .text-green-700 {
-  @apply text-green-400;
-}
-
-.dark .text-green-600 {
-  @apply text-green-500;
-}
-
-/* Enhanced scrollbar for dark mode */
-.dark ::-webkit-scrollbar-track {
-  @apply bg-green-900;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  @apply bg-green-600;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  @apply bg-green-500;
+/* Badge text improvements */
+.badge {
+  font-weight: 700 !important;
 }

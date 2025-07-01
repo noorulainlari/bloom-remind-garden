@@ -19,7 +19,7 @@ export const SoundSettings = () => {
           data-tour="sound-settings"
           variant="outline"
           size="sm"
-          className="fixed bottom-4 right-4 z-50 garden-button shadow-lg"
+          className="fixed bottom-20 right-4 z-40 garden-button shadow-lg lg:bottom-4"
           title="Sound Settings"
         >
           {activeSoundCount > 0 ? (

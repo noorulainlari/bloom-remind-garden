@@ -1,124 +1,108 @@
 
-import { useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { X, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { Button } from '@/components/ui/button';
+import { X, ArrowRight } from 'lucide-react';
 
 export const OnboardingOverlay = () => {
-  const { isActive, currentStep, steps, nextStep, prevStep, skipOnboarding } = useOnboarding();
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const { 
+    isOnboardingActive, 
+    currentStep, 
+    totalSteps, 
+    nextStep, 
+    skipOnboarding, 
+    isLastStep 
+  } = useOnboarding();
 
-  useEffect(() => {
-    if (!isActive || !steps[currentStep]) return;
+  // Don't render anything if onboarding is not active
+  if (!isOnboardingActive) {
+    return null;
+  }
 
-    const currentStepData = steps[currentStep];
-    const targetElement = document.querySelector(currentStepData.target);
-    
-    if (targetElement && overlayRef.current) {
-      const rect = targetElement.getBoundingClientRect();
-      const overlay = overlayRef.current;
-
-      // Calculate position for the tooltip
-      let top = rect.bottom + 10;
-      let left = rect.left;
-
-      switch (currentStepData.position) {
-        case 'top':
-          top = rect.top - 10;
-          break;
-        case 'left':
-          top = rect.top;
-          left = rect.left - 320;
-          break;
-        case 'right':
-          top = rect.top;
-          left = rect.right + 10;
-          break;
-        default:
-          break;
-      }
-
-      overlay.style.top = `${top}px`;
-      overlay.style.left = `${Math.max(10, left)}px`;
-
-      // Highlight the target element
-      targetElement.classList.add('onboarding-highlight');
-      
-      return () => {
-        targetElement.classList.remove('onboarding-highlight');
-      };
+  const steps = [
+    {
+      target: '[data-tour="welcome"]',
+      title: '🌱 Welcome to Plant Care Tracker!',
+      content: 'Track your plants, get watering reminders, and never forget plant care again!'
+    },
+    {
+      target: '[data-tour="add-plant"]',
+      title: '✨ Add Your First Plant',
+      content: 'Click here to search and add plants from our database or create custom ones.'
+    },
+    {
+      target: '[data-tour="sound-settings"]',
+      title: '🎵 Ambient Sounds',
+      content: 'Relax with nature sounds while caring for your plants.'
+    },
+    {
+      target: '[data-tour="add-plant-fab"]',
+      title: '⚡ Quick Add',
+      content: 'Use this floating button for quick plant additions anywhere.'
+    },
+    {
+      target: '[data-tour="theme-toggle"]',
+      title: '🌙 Theme Toggle',
+      content: 'Switch between light and dark modes for comfortable viewing.'
     }
-  }, [isActive, currentStep, steps]);
-
-  if (!isActive || !steps[currentStep]) return null;
+  ];
 
   const currentStepData = steps[currentStep];
-  const isFirst = currentStep === 0;
-  const isLast = currentStep === steps.length - 1;
 
   return (
-    <>
-      {/* Dark overlay */}
-      <div className="fixed inset-0 bg-black/50 z-[100] pointer-events-auto" />
+    <div className="fixed inset-0 z-[100] pointer-events-none">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 pointer-events-auto" onClick={skipOnboarding} />
       
-      {/* Tooltip */}
-      <div
-        ref={overlayRef}
-        className="fixed z-[101] max-w-sm"
-        style={{ transform: 'translate(0, -100%)' }}
-      >
-        <Card className="shadow-2xl border-2 border-green-300 animate-fade-in">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-bold text-green-800">
+      {/* Onboarding Card */}
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md border-2 border-green-300">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-xl font-bold text-green-800 dark:text-green-200">
                 {currentStepData.title}
-              </CardTitle>
-              <Button
-                onClick={skipOnboarding}
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-              >
-                <X className="h-4 w-4" />
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                Step {currentStep + 1} of {totalSteps}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={skipOnboarding}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          
+          <p className="text-gray-700 dark:text-gray-300 mb-6">
+            {currentStepData.content}
+          </p>
+          
+          <div className="flex justify-between items-center">
+            <div className="flex space-x-2">
+              {Array.from({ length: totalSteps }, (_, i) => (
+                <div
+                  key={i}
+                  className={`w-2 h-2 rounded-full ${
+                    i === currentStep ? 'bg-green-600' : 'bg-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
+            
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={skipOnboarding}>
+                Skip Tour
+              </Button>
+              <Button onClick={nextStep} className="garden-button">
+                {isLastStep ? 'Finish' : 'Next'}
+                {!isLastStep && <ArrowRight className="h-4 w-4 ml-2" />}
               </Button>
             </div>
-          </CardHeader>
-          
-          <CardContent className="space-y-4">
-            <p className="text-sm text-green-700 leading-relaxed">
-              {currentStepData.description}
-            </p>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex gap-1">
-                {steps.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`h-2 w-2 rounded-full ${
-                      index === currentStep ? 'bg-green-600' : 'bg-green-200'
-                    }`}
-                  />
-                ))}
-              </div>
-              
-              <div className="flex gap-2">
-                {!isFirst && (
-                  <Button onClick={prevStep} variant="outline" size="sm">
-                    <ArrowLeft className="h-4 w-4 mr-1" />
-                    Back
-                  </Button>
-                )}
-                
-                <Button onClick={nextStep} size="sm" className="garden-button">
-                  {isLast ? 'Finish' : 'Next'}
-                  {!isLast && <ArrowRight className="h-4 w-4 ml-1" />}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 };
