@@ -1,12 +1,11 @@
-
 import { useState, useEffect } from 'react';
-import { PlantSelector } from './PlantSelector';
 import { PlantList } from './PlantList';
-import { SoundSettings } from './SoundSettings';
 import { GardenerRank } from './GardenerRank';
 import { RandomPlantTip } from './RandomPlantTip';
 import { PWAInstall } from './PWAInstall';
 import { PlantReminders } from './PlantReminders';
+import { FloatingActionButton } from './FloatingActionButton';
+import { Navigation } from './Navigation';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -36,7 +35,12 @@ export const Dashboard = () => {
   }, [user, refreshTrigger]);
 
   return (
-    <div className="min-h-screen garden-background">
+    <div className="min-h-screen garden-background pb-20 lg:pb-0">
+      {/* Navigation */}
+      <header className="bg-white/90 backdrop-blur-sm shadow-sm sticky top-0 z-30">
+        <Navigation />
+      </header>
+
       <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Header Section */}
         <div className="text-center space-y-4">
@@ -48,14 +52,30 @@ export const Dashboard = () => {
           </p>
         </div>
 
+        {/* User Welcome Section */}
+        {user && (
+          <div className="bg-white/80 backdrop-blur rounded-xl p-6 shadow-lg border border-green-200">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-2xl">🌿</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-green-800">
+                  Welcome back, {user.email?.split('@')[0]}!
+                </h2>
+                <p className="text-green-600">
+                  You have {userPlants.length} plant{userPlants.length === 1 ? '' : 's'} in your garden
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Gardener Rank */}
         <GardenerRank refreshTrigger={refreshTrigger} />
 
         {/* Random Plant Tip */}
         <RandomPlantTip />
-
-        {/* Plant Selector */}
-        <PlantSelector onPlantAdded={handlePlantAdded} />
 
         {/* Plant Care Reminders */}
         {user && userPlants.length > 0 && (
@@ -67,9 +87,6 @@ export const Dashboard = () => {
 
         {/* PWA Install Prompt */}
         <PWAInstall />
-
-        {/* Sound Settings - Fixed position */}
-        <SoundSettings />
 
         {/* SEO Content */}
         <div className="mt-16 bg-white/80 backdrop-blur rounded-xl p-8 shadow-lg border border-green-200">
@@ -122,6 +139,9 @@ export const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Floating Action Button */}
+      <FloatingActionButton onPlantAdded={handlePlantAdded} />
     </div>
   );
 };
