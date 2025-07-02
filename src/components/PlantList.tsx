@@ -159,7 +159,7 @@ export const PlantList = ({ refreshTrigger }: PlantListProps) => {
             <PlantCard
               key={plant.id}
               plant={plant}
-              onUpdate={handlePlantUpdate}
+              onUpdate={() => loadPlants()}
               onDelete={handlePlantDelete}
             />
           ))}

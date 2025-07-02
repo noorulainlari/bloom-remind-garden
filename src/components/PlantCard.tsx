@@ -24,6 +24,7 @@ interface Plant {
 interface PlantCardProps {
   plant: Plant;
   onUpdate?: () => void;
+  onDelete?: (plantId: string) => void;
   actions?: React.ReactNode;
 }
 
@@ -38,7 +39,7 @@ const PLANT_FACTS = [
   "🌳 Growing plants is growing happiness!"
 ];
 
-export const PlantCard = ({ plant, onUpdate, actions }: PlantCardProps) => {
+export const PlantCard = ({ plant, onUpdate, onDelete, actions }: PlantCardProps) => {
   const [currentFact] = useState(PLANT_FACTS[Math.floor(Math.random() * PLANT_FACTS.length)]);
   
   const wasRecentlyWatered = plant.last_watered_timestamp && 
