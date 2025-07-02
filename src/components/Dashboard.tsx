@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { PlantList } from './PlantList';
 import { GardenerRank } from './GardenerRank';
@@ -17,13 +16,23 @@ import { PlantCommunity } from './PlantCommunity';
 import { PlantCareReminders } from './PlantCareReminders';
 import { PlantDiseaseDetector } from './PlantDiseaseDetector';
 import { PlantCareDashboard } from './PlantCareDashboard';
+import { PlantJournal } from './PlantJournal';
+import { PlantCompare } from './PlantCompare';
+import { PlantAchievements } from './PlantAchievements';
+import { PlantSocial } from './PlantSocial';
+import { PlantMarketplace } from './PlantMarketplace';
+import { PlantAI } from './PlantAI';
+import { PlantTimer } from './PlantTimer';
+import { PlantWeather } from './PlantWeather';
+import { PlantQuiz } from './PlantQuiz';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnboarding } from '@/hooks/useOnboarding';
-import { Play, User, LogOut } from 'lucide-react';
+import { Play, User, LogOut, BookOpen, Trophy, Users, ShoppingCart, Bot, Timer, Cloud, Brain } from 'lucide-react';
 
 export const Dashboard = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -136,15 +145,6 @@ export const Dashboard = () => {
           </div>
         )}
 
-        {/* Care Statistics */}
-        {userPlants.length > 0 && <PlantCareStats plants={userPlants} />}
-
-        {/* Comprehensive Plant Care Dashboard */}
-        {userPlants.length > 0 && <PlantCareDashboard plants={userPlants} />}
-
-        {/* Weather Widget */}
-        <WeatherWidget />
-
         {/* Add Plant Section - Main Interface - Always Visible */}
         <Card data-tour="add-plant" className="plant-card shadow-lg">
           <CardHeader>
@@ -162,28 +162,88 @@ export const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Gardener Rank */}
-        <GardenerRank refreshTrigger={refreshTrigger} />
+        {/* Enhanced Features Dashboard */}
+        <Tabs defaultValue="dashboard" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 gap-1">
+            <TabsTrigger value="dashboard" className="text-xs">Dashboard</TabsTrigger>
+            <TabsTrigger value="tools" className="text-xs">Tools</TabsTrigger>
+            <TabsTrigger value="community" className="text-xs">Community</TabsTrigger>
+            <TabsTrigger value="learning" className="text-xs">Learning</TabsTrigger>
+            <TabsTrigger value="achievements" className="text-xs">Achievements</TabsTrigger>
+            <TabsTrigger value="marketplace" className="text-xs">Shop</TabsTrigger>
+            <TabsTrigger value="ai" className="text-xs">AI Helper</TabsTrigger>
+            <TabsTrigger value="weather" className="text-xs">Weather</TabsTrigger>
+          </TabsList>
 
-        {/* Smart Reminders */}
-        <PlantCareReminders />
+          <TabsContent value="dashboard" className="space-y-6">
+            {/* Care Statistics */}
+            {userPlants.length > 0 && <PlantCareStats plants={userPlants} />}
 
-        {/* Plant Care Calendar */}
-        {userPlants.length > 0 && <PlantCareCalendar plants={userPlants} />}
+            {/* Comprehensive Plant Care Dashboard */}
+            {userPlants.length > 0 && <PlantCareDashboard plants={userPlants} />}
 
-        {/* Disease Detection */}
-        <PlantDiseaseDetector />
+            {/* Weather Widget */}
+            <WeatherWidget />
 
-        {/* Random Plant Tip */}
-        <RandomPlantTip />
+            {/* Gardener Rank */}
+            <GardenerRank refreshTrigger={refreshTrigger} />
+          </TabsContent>
 
-        {/* Plant Care Reminders */}
-        {user && userPlants.length > 0 && (
-          <PlantReminders userPlants={userPlants} />
-        )}
+          <TabsContent value="tools" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              <PlantTimer />
+              {userPlants.length > 0 && <PlantCompare plants={userPlants} />}
+            </div>
+            
+            {/* Smart Reminders */}
+            <PlantCareReminders />
 
-        {/* Plant Community */}
-        <PlantCommunity />
+            {/* Plant Care Calendar */}
+            {userPlants.length > 0 && <PlantCareCalendar plants={userPlants} />}
+
+            {/* Disease Detection */}
+            <PlantDiseaseDetector />
+          </TabsContent>
+
+          <TabsContent value="community" className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              <PlantSocial />
+              <PlantCommunity />
+            </div>
+            
+            {/* Plant Care Reminders */}
+            {user && userPlants.length > 0 && (
+              <PlantReminders userPlants={userPlants} />
+            )}
+          </TabsContent>
+
+          <TabsContent value="learning" className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              <PlantQuiz />
+              <RandomPlantTip />
+            </div>
+            
+            {userPlants.length > 0 && userPlants.slice(0, 1).map(plant => (
+              <PlantJournal key={plant.id} plant={plant} />
+            ))}
+          </TabsContent>
+
+          <TabsContent value="achievements" className="space-y-6">
+            <PlantAchievements plants={userPlants} />
+          </TabsContent>
+
+          <TabsContent value="marketplace" className="space-y-6">
+            <PlantMarketplace />
+          </TabsContent>
+
+          <TabsContent value="ai" className="space-y-6">
+            <PlantAI />
+          </TabsContent>
+
+          <TabsContent value="weather" className="space-y-6">
+            <PlantWeather />
+          </TabsContent>
+        </Tabs>
 
         {/* Plant List */}
         <PlantList refreshTrigger={refreshTrigger} />
