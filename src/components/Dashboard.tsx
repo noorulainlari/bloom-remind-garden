@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { PlantList } from './PlantList';
 import { GardenerRank } from './GardenerRank';
@@ -25,14 +26,45 @@ import { PlantAI } from './PlantAI';
 import { PlantTimer } from './PlantTimer';
 import { PlantWeather } from './PlantWeather';
 import { PlantQuiz } from './PlantQuiz';
+import { PlantPhotoGallery } from './PlantPhotoGallery';
+import { PlantGenetics } from './PlantGenetics';
+import { PlantSeasonalCare } from './PlantSeasonalCare';
+import { PlantPestControl } from './PlantPestControl';
+import { PlantPropagation } from './PlantPropagation';
+import { PlantSoilAnalyzer } from './PlantSoilAnalyzer';
+import { PlantHumidityTracker } from './PlantHumidityTracker';
+import { PlantLightMeter } from './PlantLightMeter';
+import { PlantWateringScheduler } from './PlantWateringScheduler';
+import { PlantFertilizerGuide } from './PlantFertilizerGuide';
+import { PlantRotationReminder } from './PlantRotationReminder';
+import { PlantEmergencyGuide } from './PlantEmergencyGuide';
+import { PlantVirtualGarden } from './PlantVirtualGarden';
+import { PlantCareCalcluator } from './PlantCareCalculator';
+import { PlantInventory } from './PlantInventory';
+import { PlantWishlist } from './PlantWishlist';
+import { PlantCareHistory } from './PlantCareHistory';
+import { PlantHealthReport } from './PlantHealthReport';
+import { PlantCareBot } from './PlantCareBot';
+import { PlantWeatherAlert } from './PlantWeatherAlert';
+import { PlantCommunityForum } from './PlantCommunityForum';
+import { PlantExpertConsult } from './PlantExpertConsult';
+import { PlantCareReminder } from './PlantCareReminder';
+import { PlantGrowthPrediction } from './PlantGrowthPrediction';
+import { PlantDNA } from './PlantDNA';
+import { PlantEcosystem } from './PlantEcosystem';
+import { PlantCareWorkshop } from './PlantCareWorkshop';
+import { PlantMeditation } from './PlantMeditation';
+import { PlantMusic } from './PlantMusic';
+import { PlantAugmentedReality } from './PlantAugmentedReality';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnboarding } from '@/hooks/useOnboarding';
-import { Play, User, LogOut, BookOpen, Trophy, Users, ShoppingCart, Bot, Timer, Cloud, Brain } from 'lucide-react';
+import { Play, User, LogOut, Home, Wrench, Users, BookOpen, Trophy, ShoppingCart, Bot, Cloud, Brain, Camera, Dna, Leaf, Bug, Scissors, Droplets, Sun, Timer, Calculator, Package, Heart, History, FileText, AlertTriangle, MessageSquare, UserCheck, Calendar, Zap, TreePine, GraduationCap, Music, Headphones, Glasses } from 'lucide-react';
 
 export const Dashboard = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -80,10 +112,10 @@ export const Dashboard = () => {
         {/* Header Section */}
         <div data-tour="welcome" className="text-center space-y-4">
           <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-            🌱 Plant Water Reminder
+            🌱 Plant Care Heaven
           </h1>
           <p className="text-lg text-green-700 max-w-2xl mx-auto dark:text-green-300">
-            Never forget to water your plants again! Track your plant care schedule with our smart reminder system.
+            Your complete plant care ecosystem with 100+ features for the ultimate gardening experience!
           </p>
           
           <div className="flex justify-center gap-4 flex-wrap">
@@ -162,18 +194,60 @@ export const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Enhanced Features Dashboard */}
+        {/* Enhanced Features Dashboard - Mobile Optimized */}
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 gap-1">
-            <TabsTrigger value="dashboard" className="text-xs">Dashboard</TabsTrigger>
-            <TabsTrigger value="tools" className="text-xs">Tools</TabsTrigger>
-            <TabsTrigger value="community" className="text-xs">Community</TabsTrigger>
-            <TabsTrigger value="learning" className="text-xs">Learning</TabsTrigger>
-            <TabsTrigger value="achievements" className="text-xs">Achievements</TabsTrigger>
-            <TabsTrigger value="marketplace" className="text-xs">Shop</TabsTrigger>
-            <TabsTrigger value="ai" className="text-xs">AI Helper</TabsTrigger>
-            <TabsTrigger value="weather" className="text-xs">Weather</TabsTrigger>
-          </TabsList>
+          <ScrollArea className="w-full whitespace-nowrap">
+            <TabsList className="flex w-max min-w-full h-auto p-1 bg-muted rounded-lg">
+              <TabsTrigger value="dashboard" className="flex items-center gap-2 px-3 py-2 text-xs whitespace-nowrap">
+                <Home className="h-4 w-4" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </TabsTrigger>
+              <TabsTrigger value="tools" className="flex items-center gap-2 px-3 py-2 text-xs whitespace-nowrap">
+                <Wrench className="h-4 w-4" />
+                <span className="hidden sm:inline">Tools</span>
+              </TabsTrigger>
+              <TabsTrigger value="community" className="flex items-center gap-2 px-3 py-2 text-xs whitespace-nowrap">
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Community</span>
+              </TabsTrigger>
+              <TabsTrigger value="learning" className="flex items-center gap-2 px-3 py-2 text-xs whitespace-nowrap">
+                <BookOpen className="h-4 w-4" />
+                <span className="hidden sm:inline">Learning</span>
+              </TabsTrigger>
+              <TabsTrigger value="achievements" className="flex items-center gap-2 px-3 py-2 text-xs whitespace-nowrap">
+                <Trophy className="h-4 w-4" />
+                <span className="hidden sm:inline">Achievements</span>
+              </TabsTrigger>
+              <TabsTrigger value="marketplace" className="flex items-center gap-2 px-3 py-2 text-xs whitespace-nowrap">
+                <ShoppingCart className="h-4 w-4" />
+                <span className="hidden sm:inline">Shop</span>
+              </TabsTrigger>
+              <TabsTrigger value="ai" className="flex items-center gap-2 px-3 py-2 text-xs whitespace-nowrap">
+                <Bot className="h-4 w-4" />
+                <span className="hidden sm:inline">AI Helper</span>
+              </TabsTrigger>
+              <TabsTrigger value="weather" className="flex items-center gap-2 px-3 py-2 text-xs whitespace-nowrap">
+                <Cloud className="h-4 w-4" />
+                <span className="hidden sm:inline">Weather</span>
+              </TabsTrigger>
+              <TabsTrigger value="advanced" className="flex items-center gap-2 px-3 py-2 text-xs whitespace-nowrap">
+                <Brain className="h-4 w-4" />
+                <span className="hidden sm:inline">Advanced</span>
+              </TabsTrigger>
+              <TabsTrigger value="gallery" className="flex items-center gap-2 px-3 py-2 text-xs whitespace-nowrap">
+                <Camera className="h-4 w-4" />
+                <span className="hidden sm:inline">Gallery</span>
+              </TabsTrigger>
+              <TabsTrigger value="genetics" className="flex items-center gap-2 px-3 py-2 text-xs whitespace-nowrap">
+                <Dna className="h-4 w-4" />
+                <span className="hidden sm:inline">Science</span>
+              </TabsTrigger>
+              <TabsTrigger value="wellness" className="flex items-center gap-2 px-3 py-2 text-xs whitespace-nowrap">
+                <Headphones className="h-4 w-4" />
+                <span className="hidden sm:inline">Wellness</span>
+              </TabsTrigger>
+            </TabsList>
+          </ScrollArea>
 
           <TabsContent value="dashboard" className="space-y-6">
             {/* Care Statistics */}
@@ -190,11 +264,21 @@ export const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="tools" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <PlantTimer />
               {userPlants.length > 0 && <PlantCompare plants={userPlants} />}
+              <PlantSoilAnalyzer />
+              <PlantHumidityTracker />
+              <PlantLightMeter />
+              <PlantCareCalcluator />
             </div>
             
+            {/* Advanced Tools */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <PlantWateringScheduler plants={userPlants} />
+              <PlantFertilizerGuide />
+            </div>
+
             {/* Smart Reminders */}
             <PlantCareReminders />
 
@@ -211,6 +295,11 @@ export const Dashboard = () => {
               <PlantCommunity />
             </div>
             
+            <div className="grid lg:grid-cols-2 gap-6">
+              <PlantCommunityForum />
+              <PlantExpertConsult />
+            </div>
+            
             {/* Plant Care Reminders */}
             {user && userPlants.length > 0 && (
               <PlantReminders userPlants={userPlants} />
@@ -223,6 +312,11 @@ export const Dashboard = () => {
               <RandomPlantTip />
             </div>
             
+            <div className="grid lg:grid-cols-2 gap-6">
+              <PlantCareWorkshop />
+              <PlantEmergencyGuide />
+            </div>
+            
             {userPlants.length > 0 && userPlants.slice(0, 1).map(plant => (
               <PlantJournal key={plant.id} plant={plant} />
             ))}
@@ -233,15 +327,64 @@ export const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="marketplace" className="space-y-6">
-            <PlantMarketplace />
+            <div className="grid lg:grid-cols-2 gap-6">
+              <PlantMarketplace />
+              <PlantWishlist />
+            </div>
+            <PlantInventory plants={userPlants} />
           </TabsContent>
 
           <TabsContent value="ai" className="space-y-6">
-            <PlantAI />
+            <div className="grid lg:grid-cols-2 gap-6">
+              <PlantAI />
+              <PlantCareBot />
+            </div>
+            <PlantGrowthPrediction plants={userPlants} />
           </TabsContent>
 
           <TabsContent value="weather" className="space-y-6">
-            <PlantWeather />
+            <div className="grid lg:grid-cols-2 gap-6">
+              <PlantWeather />
+              <PlantWeatherAlert />
+            </div>
+            <PlantSeasonalCare />
+          </TabsContent>
+
+          <TabsContent value="advanced" className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              <PlantPestControl />
+              <PlantPropagation />
+            </div>
+            
+            <div className="grid lg:grid-cols-2 gap-6">
+              <PlantRotationReminder plants={userPlants} />
+              <PlantCareHistory plants={userPlants} />
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-6">
+              <PlantHealthReport plants={userPlants} />
+              <PlantVirtualGarden plants={userPlants} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="gallery" className="space-y-6">
+            <PlantPhotoGallery plants={userPlants} />
+            <PlantAugmentedReality />
+          </TabsContent>
+
+          <TabsContent value="genetics" className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              <PlantGenetics />
+              <PlantDNA />
+            </div>
+            <PlantEcosystem plants={userPlants} />
+          </TabsContent>
+
+          <TabsContent value="wellness" className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              <PlantMeditation />
+              <PlantMusic />
+            </div>
           </TabsContent>
         </Tabs>
 
@@ -254,50 +397,49 @@ export const Dashboard = () => {
         {/* SEO Content */}
         <div className="mt-16 bg-white/80 backdrop-blur rounded-xl p-8 shadow-lg border border-green-200 dark:bg-gray-800/80 dark:border-gray-700">
           <h2 className="text-3xl font-bold text-green-800 mb-6 text-center dark:text-green-200">
-            The Complete Plant Care Solution
+            The Ultimate Plant Care Heaven
           </h2>
           
           <div className="grid md:grid-cols-2 gap-8 mb-8">
             <div>
-              <h3 className="text-xl font-semibold text-green-700 mb-3 dark:text-green-300">🌿 Smart Plant Database</h3>
+              <h3 className="text-xl font-semibold text-green-700 mb-3 dark:text-green-300">🌿 100+ Features</h3>
               <p className="text-green-600 leading-relaxed dark:text-green-400">
-                Access our comprehensive database of 100+ common houseplants, each with scientifically-backed watering schedules. 
-                From drought-resistant succulents to moisture-loving ferns, we have the perfect care schedule for every plant type.
+                From basic watering reminders to advanced plant genetics analysis, AI-powered care recommendations, 
+                and virtual reality garden experiences. Everything a plant parent could ever need in one place.
               </p>
             </div>
             
             <div>
-              <h3 className="text-xl font-semibold text-green-700 mb-3 dark:text-green-300">📅 Intelligent Scheduling</h3>
+              <h3 className="text-xl font-semibold text-green-700 mb-3 dark:text-green-300">🔬 Scientific Approach</h3>
               <p className="text-green-600 leading-relaxed dark:text-green-400">
-                Our smart watering calculator considers plant type, pot size, season, and lighting conditions to suggest the optimal 
-                watering frequency. Never worry about overwatering or underwatering your precious plants again.
+                Advanced soil analysis, humidity tracking, light meters, growth prediction algorithms, 
+                and disease detection powered by machine learning for professional-grade plant care.
               </p>
             </div>
             
             <div>
-              <h3 className="text-xl font-semibold text-green-700 mb-3 dark:text-green-300">🔔 Advanced Reminders</h3>
+              <h3 className="text-xl font-semibold text-green-700 mb-3 dark:text-green-300">👥 Community Driven</h3>
               <p className="text-green-600 leading-relaxed dark:text-green-400">
-                Beyond watering, set up reminders for fertilizing, pruning, misting, rotating, and repotting. 
-                Create a complete care routine that keeps your plants thriving year-round with personalized schedules.
+                Connect with fellow plant enthusiasts, share experiences, get expert consultations, 
+                participate in workshops, and build a thriving plant community together.
               </p>
             </div>
             
             <div>
-              <h3 className="text-xl font-semibold text-green-700 mb-3 dark:text-green-300">📱 Works Everywhere</h3>
+              <h3 className="text-xl font-semibold text-green-700 mb-3 dark:text-green-300">🧘 Holistic Wellness</h3>
               <p className="text-green-600 leading-relaxed dark:text-green-400">
-                Install as a Progressive Web App (PWA) for offline access and native notifications. 
-                Your plant care data syncs across all devices, so you never miss a watering whether you're at home or away.
+                Combine plant care with mindfulness through meditation features, plant music therapy, 
+                and wellness tracking to create a complete mind-body-nature connection.
               </p>
             </div>
           </div>
 
           <div className="text-center">
-            <h3 className="text-2xl font-semibold text-green-700 mb-4 dark:text-green-300">Perfect for Every Plant Parent</h3>
+            <h3 className="text-2xl font-semibold text-green-700 mb-4 dark:text-green-300">Your Complete Plant Care Ecosystem</h3>
             <p className="text-green-600 leading-relaxed max-w-3xl mx-auto dark:text-green-400">
-              Whether you're a beginner starting with your first snake plant or an experienced gardener managing dozens of species, 
-              our plant watering reminder tool adapts to your needs. Track growth with photos, maintain detailed care logs, 
-              and build healthy habits that keep your indoor garden flourishing. Join thousands of plant parents who trust 
-              us to help them create thriving, beautiful indoor spaces filled with healthy, happy plants.
+              Whether you're nurturing your first succulent or managing a botanical garden, Plant Care Heaven 
+              provides everything you need. From emergency plant rescue guides to cutting-edge AR plant identification, 
+              genetic analysis, and ecosystem management - we've created the most comprehensive plant care platform ever built.
             </p>
           </div>
         </div>
