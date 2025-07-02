@@ -1,9 +1,8 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bug, Shield, AlertTriangle, Microscope, Spray, Leaf } from 'lucide-react';
+import { Bug, Shield, AlertTriangle, Microscope, Droplets, Leaf } from 'lucide-react';
 
 export const PlantPestControl = () => {
   const [selectedPest, setSelectedPest] = useState('aphids');
@@ -96,7 +95,7 @@ export const PlantPestControl = () => {
 
             <div>
               <h4 className="font-medium text-green-700 mb-2 flex items-center gap-1">
-                <Spray className="h-4 w-4" />
+                <Droplets className="h-4 w-4" />
                 Treatment Options
               </h4>
               <ul className="text-sm space-y-1">
