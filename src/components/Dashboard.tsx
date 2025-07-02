@@ -9,17 +9,20 @@ import { FloatingActionButton } from './FloatingActionButton';
 import { Navigation } from './Navigation';
 import { PlantSelector } from './PlantSelector';
 import { SoundSettings } from './SoundSettings';
+import { AuthForm } from './AuthForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnboarding } from '@/hooks/useOnboarding';
-import { Play } from 'lucide-react';
+import { Play, User, LogOut } from 'lucide-react';
 
 export const Dashboard = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [userPlants, setUserPlants] = useState([]);
-  const { user } = useAuth();
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const { user, signOut } = useAuth();
   const { startOnboarding } = useOnboarding();
 
   const handlePlantAdded = () => {
@@ -42,6 +45,10 @@ export const Dashboard = () => {
     loadUserPlants();
   }, [user, refreshTrigger]);
 
+  const handleAuthSuccess = () => {
+    setShowAuthDialog(false);
+  };
+
   return (
     <div className="min-h-screen garden-background pb-20 lg:pb-0">
       {/* Navigation */}
@@ -59,15 +66,44 @@ export const Dashboard = () => {
             Never forget to water your plants again! Track your plant care schedule with our smart reminder system.
           </p>
           
-          {/* Onboarding Start Button */}
-          <Button 
-            onClick={startOnboarding}
-            className="garden-button mt-4"
-            size="sm"
-          >
-            <Play className="h-4 w-4 mr-2" />
-            Take Tour
-          </Button>
+          <div className="flex justify-center gap-4 flex-wrap">
+            {/* Onboarding Start Button */}
+            <Button 
+              onClick={startOnboarding}
+              className="garden-button"
+              size="sm"
+            >
+              <Play className="h-4 w-4 mr-2" />
+              Take Tour
+            </Button>
+
+            {/* Auth Button */}
+            {!user ? (
+              <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <User className="h-4 w-4 mr-2" />
+                    Sign In (Optional)
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Sign In or Sign Up</DialogTitle>
+                  </DialogHeader>
+                  <AuthForm onSuccess={handleAuthSuccess} />
+                </DialogContent>
+              </Dialog>
+            ) : (
+              <Button 
+                onClick={signOut}
+                variant="outline" 
+                size="sm"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* User Welcome Section */}
@@ -89,19 +125,22 @@ export const Dashboard = () => {
           </div>
         )}
 
-        {/* Add Plant Section - Main Interface */}
-        {user && (
-          <Card data-tour="add-plant" className="plant-card shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-green-800 flex items-center gap-3 dark:text-green-200">
-                🌱 Add New Plant
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PlantSelector onPlantAdded={handlePlantAdded} />
-            </CardContent>
-          </Card>
-        )}
+        {/* Add Plant Section - Main Interface - Always Visible */}
+        <Card data-tour="add-plant" className="plant-card shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-green-800 flex items-center gap-3 dark:text-green-200">
+              🌱 Add New Plant
+            </CardTitle>
+            {!user && (
+              <p className="text-sm text-green-600 dark:text-green-400">
+                Plants will be saved locally. Sign in to sync across devices!
+              </p>
+            )}
+          </CardHeader>
+          <CardContent>
+            <PlantSelector onPlantAdded={handlePlantAdded} />
+          </CardContent>
+        </Card>
 
         {/* Gardener Rank */}
         <GardenerRank refreshTrigger={refreshTrigger} />

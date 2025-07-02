@@ -98,16 +98,20 @@ export const ImprovedPlantSelector = ({ onPlantAdded }: ImprovedPlantSelectorPro
     return { level: 'Easy Care', color: 'bg-green-100 text-green-800' };
   };
 
-  const addPlantToGarden = async () => {
-    if (!user) {
-      toast({
-        title: "Please sign in",
-        description: "You need to be signed in to add plants",
-        variant: "destructive",
-      });
-      return;
-    }
+  // Save plant locally if no user, otherwise save to database
+  const saveToLocalStorage = (plantData: any) => {
+    const existingPlants = JSON.parse(localStorage.getItem('localPlants') || '[]');
+    const newPlant = {
+      ...plantData,
+      id: Date.now().toString(), // Simple ID for local storage
+      created_at: new Date().toISOString(),
+    };
+    existingPlants.push(newPlant);
+    localStorage.setItem('localPlants', JSON.stringify(existingPlants));
+    return newPlant;
+  };
 
+  const addPlantToGarden = async () => {
     if (!selectedPlant && !isCustomPlant) {
       toast({
         title: "No plant selected",
@@ -121,7 +125,6 @@ export const ImprovedPlantSelector = ({ onPlantAdded }: ImprovedPlantSelectorPro
 
     try {
       const plantData = {
-        user_id: user.id,
         plant_name: isCustomPlant ? customName : selectedPlant!.name,
         scientific_name: isCustomPlant ? null : selectedPlant!.scientific_name,
         custom_name: customName || null,
@@ -130,16 +133,30 @@ export const ImprovedPlantSelector = ({ onPlantAdded }: ImprovedPlantSelectorPro
         status: 'active'
       };
 
-      const { error } = await supabase
-        .from('user_plants')
-        .insert(plantData);
+      if (user) {
+        // Save to database if user is logged in
+        const { error } = await supabase
+          .from('user_plants')
+          .insert({
+            ...plantData,
+            user_id: user.id,
+          });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "🌱 Plant Added!",
-        description: `${plantData.plant_name} has been added to your garden`,
-      });
+        toast({
+          title: "🌱 Plant Added!",
+          description: `${plantData.plant_name} has been added to your garden and synced to your account`,
+        });
+      } else {
+        // Save to local storage if no user
+        saveToLocalStorage(plantData);
+        
+        toast({
+          title: "🌱 Plant Added Locally!",
+          description: `${plantData.plant_name} has been saved locally. Sign in to sync across devices!`,
+        });
+      }
 
       // Reset form
       setSelectedPlant(null);
@@ -306,8 +323,15 @@ export const ImprovedPlantSelector = ({ onPlantAdded }: ImprovedPlantSelectorPro
                 onClick={addPlantToGarden}
                 disabled={isLoading}
               >
-                {isLoading ? 'Adding Plant...' : '🌱 Add to My Garden'}
+                {isLoading ? 'Adding Plant...' : 
+                 user ? '🌱 Add to My Garden' : '🌱 Add Plant (Saved Locally)'}
               </Button>
+              
+              {!user && (
+                <p className="text-xs text-center text-gray-500">
+                  Plant will be saved locally. Sign in to sync across devices!
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
