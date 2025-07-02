@@ -8,6 +8,9 @@ import { PlantTooltips } from './PlantTooltips';
 import { PlantStatus } from './plant/PlantStatus';
 import { PlantImage } from './plant/PlantImage';
 import { PlantInfo } from './plant/PlantInfo';
+import { PlantGrowthTracker } from './PlantGrowthTracker';
+import { PlantHealthChecker } from './PlantHealthChecker';
+import { PlantNotes } from './PlantNotes';
 
 interface Plant {
   id: string;
@@ -41,6 +44,7 @@ const PLANT_FACTS = [
 
 export const PlantCard = ({ plant, onUpdate, onDelete, actions }: PlantCardProps) => {
   const [currentFact] = useState(PLANT_FACTS[Math.floor(Math.random() * PLANT_FACTS.length)]);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   
   const wasRecentlyWatered = plant.last_watered_timestamp && 
     new Date(plant.last_watered_timestamp).toDateString() === new Date().toDateString();
@@ -134,6 +138,24 @@ export const PlantCard = ({ plant, onUpdate, onDelete, actions }: PlantCardProps
         <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl border-2 border-yellow-200">
           <p className="text-base text-orange-700 font-bold text-center">{currentFact}</p>
         </div>
+
+        {/* Advanced Features Toggle */}
+        <Button
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          variant="ghost"
+          className="w-full text-green-600 hover:text-green-700"
+        >
+          {showAdvanced ? 'Hide' : 'Show'} Advanced Features
+        </Button>
+
+        {/* Advanced Features */}
+        {showAdvanced && (
+          <div className="space-y-4">
+            <PlantGrowthTracker plant={plant} />
+            <PlantHealthChecker plant={plant} />
+            <PlantNotes plant={plant} />
+          </div>
+        )}
 
         {/* Quick Water Button */}
         <div className="flex justify-center pt-2">

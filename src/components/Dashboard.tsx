@@ -10,6 +10,13 @@ import { Navigation } from './Navigation';
 import { PlantSelector } from './PlantSelector';
 import { SoundSettings } from './SoundSettings';
 import { AuthForm } from './AuthForm';
+import { PlantCareStats } from './PlantCareStats';
+import { WeatherWidget } from './WeatherWidget';
+import { PlantCareCalendar } from './PlantCareCalendar';
+import { PlantCommunity } from './PlantCommunity';
+import { PlantCareReminders } from './PlantCareReminders';
+import { PlantDiseaseDetector } from './PlantDiseaseDetector';
+import { PlantCareDashboard } from './PlantCareDashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -32,14 +39,18 @@ export const Dashboard = () => {
   // Load user plants for reminders
   useEffect(() => {
     const loadUserPlants = async () => {
-      if (!user) return;
-
-      const { data } = await supabase
-        .from('user_plants')
-        .select('*')
-        .eq('user_id', user.id);
-      
-      setUserPlants(data || []);
+      if (user) {
+        const { data } = await supabase
+          .from('user_plants')
+          .select('*')
+          .eq('user_id', user.id);
+        
+        setUserPlants(data || []);
+      } else {
+        // Load from local storage for non-authenticated users
+        const localPlants = JSON.parse(localStorage.getItem('localPlants') || '[]');
+        setUserPlants(localPlants);
+      }
     };
 
     loadUserPlants();
@@ -125,6 +136,15 @@ export const Dashboard = () => {
           </div>
         )}
 
+        {/* Care Statistics */}
+        {userPlants.length > 0 && <PlantCareStats plants={userPlants} />}
+
+        {/* Comprehensive Plant Care Dashboard */}
+        {userPlants.length > 0 && <PlantCareDashboard plants={userPlants} />}
+
+        {/* Weather Widget */}
+        <WeatherWidget />
+
         {/* Add Plant Section - Main Interface - Always Visible */}
         <Card data-tour="add-plant" className="plant-card shadow-lg">
           <CardHeader>
@@ -145,6 +165,15 @@ export const Dashboard = () => {
         {/* Gardener Rank */}
         <GardenerRank refreshTrigger={refreshTrigger} />
 
+        {/* Smart Reminders */}
+        <PlantCareReminders />
+
+        {/* Plant Care Calendar */}
+        {userPlants.length > 0 && <PlantCareCalendar plants={userPlants} />}
+
+        {/* Disease Detection */}
+        <PlantDiseaseDetector />
+
         {/* Random Plant Tip */}
         <RandomPlantTip />
 
@@ -152,6 +181,9 @@ export const Dashboard = () => {
         {user && userPlants.length > 0 && (
           <PlantReminders userPlants={userPlants} />
         )}
+
+        {/* Plant Community */}
+        <PlantCommunity />
 
         {/* Plant List */}
         <PlantList refreshTrigger={refreshTrigger} />

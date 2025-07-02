@@ -5,6 +5,7 @@ import { Droplets, CheckCircle } from 'lucide-react';
 import { PlantTooltips } from './PlantTooltips';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { addDays } from 'date-fns';
 
 interface QuickWaterButtonProps {
@@ -24,6 +25,7 @@ export const QuickWaterButton = ({
 }: QuickWaterButtonProps) => {
   const [isWatering, setIsWatering] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleQuickWater = async () => {
     setIsWatering(true);
@@ -33,22 +35,38 @@ export const QuickWaterButton = ({
       const nextWaterDate = addDays(new Date(today), wateringIntervalDays);
       const timestamp = new Date().toISOString();
 
-      const { error } = await supabase
-        .from('user_plants')
-        .update({
-          last_watered: today,
-          next_water_date: nextWaterDate.toISOString().split('T')[0],
-          last_watered_timestamp: timestamp
-        })
-        .eq('id', plantId);
+      if (user) {
+        // Update in database for authenticated users
+        const { error } = await supabase
+          .from('user_plants')
+          .update({
+            last_watered: today,
+            next_water_date: nextWaterDate.toISOString().split('T')[0],
+            last_watered_timestamp: timestamp
+          })
+          .eq('id', plantId);
 
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update watering record.",
-          variant: "destructive",
-        });
-        return;
+        if (error) {
+          console.error('Database update error:', error);
+          toast({
+            title: "Error",
+            description: "Failed to update watering record in database.",
+            variant: "destructive",
+          });
+          return;
+        }
+      } else {
+        // Update in local storage for non-authenticated users
+        const localPlants = JSON.parse(localStorage.getItem('localPlants') || '[]');
+        const updatedPlants = localPlants.map((plant: any) => 
+          plant.id === plantId ? {
+            ...plant,
+            last_watered: today,
+            next_water_date: nextWaterDate.toISOString().split('T')[0],
+            last_watered_timestamp: timestamp
+          } : plant
+        );
+        localStorage.setItem('localPlants', JSON.stringify(updatedPlants));
       }
 
       toast({
