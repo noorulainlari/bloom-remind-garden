@@ -6,6 +6,12 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Beaker, TrendingUp, AlertTriangle, Plus, Target } from 'lucide-react';
 
+interface NutrientData {
+  current: number;
+  optimal: number;
+  status: string;
+}
+
 export const PlantNutritionTracker = () => {
   const [selectedPlant, setSelectedPlant] = useState('monstera');
   
@@ -65,7 +71,10 @@ export const PlantNutritionTracker = () => {
   const nutrients = Object.entries(currentPlant.nutrients);
 
   const overallHealth = Math.round(
-    nutrients.reduce((acc, [_, nutrient]) => acc + (nutrient.current / nutrient.optimal * 100), 0) / nutrients.length
+    nutrients.reduce((acc, [_, nutrient]) => {
+      const nutrientData = nutrient as NutrientData;
+      return acc + (nutrientData.current / nutrientData.optimal * 100);
+    }, 0) / nutrients.length
   );
 
   return (
@@ -106,25 +115,28 @@ export const PlantNutritionTracker = () => {
 
         <div className="space-y-3">
           <h4 className="font-medium text-gray-800">Nutrient Levels</h4>
-          {nutrients.map(([name, nutrient]) => (
-            <div key={name} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium capitalize">{name}</span>
-                <div className="flex items-center gap-2">
-                  <span className={`text-sm ${getStatusColor(nutrient.status)}`}>
-                    {nutrient.current}/{nutrient.optimal}
-                  </span>
-                  <Badge size="sm" className={getStatusBadge(nutrient.status)}>
-                    {nutrient.status}
-                  </Badge>
+          {nutrients.map(([name, nutrient]) => {
+            const nutrientData = nutrient as NutrientData;
+            return (
+              <div key={name} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium capitalize">{name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm ${getStatusColor(nutrientData.status)}`}>
+                      {nutrientData.current}/{nutrientData.optimal}
+                    </span>
+                    <Badge className={getStatusBadge(nutrientData.status)}>
+                      {nutrientData.status}
+                    </Badge>
+                  </div>
                 </div>
+                <Progress 
+                  value={(nutrientData.current / nutrientData.optimal) * 100} 
+                  className="h-2"
+                />
               </div>
-              <Progress 
-                value={(nutrient.current / nutrient.optimal) * 100} 
-                className="h-2"
-              />
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="bg-yellow-50 p-3 rounded-lg">

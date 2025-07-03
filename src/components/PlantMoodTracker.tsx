@@ -1,11 +1,15 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'; 
 import { Badge } from '@/components/ui/badge';
 import { Smile, Frown, Meh, Heart, TrendingUp, Calendar } from 'lucide-react';
 
-export const PlantMoodTracker = () => {
+interface PlantMoodTrackerProps {
+  plant?: any;
+}
+
+export const PlantMoodTracker = ({ plant }: PlantMoodTrackerProps = {}) => {
   const [selectedPlant, setSelectedPlant] = useState('philodendron');
   
   const plants = {
@@ -129,7 +133,7 @@ export const PlantMoodTracker = () => {
                     <p className="text-xs text-gray-500">{entry.notes}</p>
                   </div>
                 </div>
-                <Badge size="sm" className={`${moodEmojis[entry.mood].bg} ${moodEmojis[entry.mood].color}`}>
+                <Badge className={`${moodEmojis[entry.mood].bg} ${moodEmojis[entry.mood].color}`}>
                   {entry.mood}
                 </Badge>
               </div>

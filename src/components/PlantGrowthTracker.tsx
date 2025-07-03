@@ -5,7 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, Camera, Ruler, Calendar, BarChart3, Leaf } from 'lucide-react';
 
-export const PlantGrowthTracker = () => {
+interface PlantGrowthTrackerProps {
+  plant?: any;
+}
+
+export const PlantGrowthTracker = ({ plant }: PlantGrowthTrackerProps = {}) => {
   const [selectedPlant, setSelectedPlant] = useState('pothos');
   
   const plants = {
@@ -148,7 +152,7 @@ export const PlantGrowthTracker = () => {
                   <span>H: {measurement.height}cm</span>
                   <span>W: {measurement.width}cm</span>
                   <span>L: {measurement.leaves}</span>
-                  <Badge size="sm" className={getHealthColor(measurement.health)}>
+                  <Badge className={getHealthColor(measurement.health)}>
                     {measurement.health}%
                   </Badge>
                 </div>

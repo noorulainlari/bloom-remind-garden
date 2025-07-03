@@ -6,7 +6,17 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Heart, Thermometer, Droplets, Sun, Wind, AlertTriangle, CheckCircle } from 'lucide-react';
 
-export const PlantHealthChecker = () => {
+interface PlantHealthCheckerProps {
+  plant?: any;
+}
+
+interface FactorData {
+  score: number;
+  status: string;
+  message: string;
+}
+
+export const PlantHealthChecker = ({ plant }: PlantHealthCheckerProps = {}) => {
   const [selectedPlant, setSelectedPlant] = useState('peace-lily');
   
   const plants = {
@@ -125,26 +135,29 @@ export const PlantHealthChecker = () => {
 
         <div className="space-y-3">
           <h4 className="font-medium text-gray-800">Health Factors</h4>
-          {Object.entries(currentPlant.factors).map(([factor, data]) => (
-            <div key={factor} className="bg-white p-3 rounded-lg border">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  {getFactorIcon(factor)}
-                  <span className="font-medium capitalize">{factor}</span>
+          {Object.entries(currentPlant.factors).map(([factor, data]) => {
+            const factorData = data as FactorData;
+            return (
+              <div key={factor} className="bg-white p-3 rounded-lg border">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    {getFactorIcon(factor)}
+                    <span className="font-medium capitalize">{factor}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`font-bold ${getScoreColor(factorData.score)}`}>
+                      {factorData.score}%
+                    </span>
+                    <Badge className={getStatusColor(factorData.status)}>
+                      {factorData.status}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`font-bold ${getScoreColor(data.score)}`}>
-                    {data.score}%
-                  </span>
-                  <Badge size="sm" className={getStatusColor(data.status)}>
-                    {data.status}
-                  </Badge>
-                </div>
+                <Progress value={factorData.score} className="h-2 mb-2" />
+                <p className="text-xs text-gray-600">{factorData.message}</p>
               </div>
-              <Progress value={data.score} className="h-2 mb-2" />
-              <p className="text-xs text-gray-600">{data.message}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {currentPlant.symptoms.length > 0 && (
