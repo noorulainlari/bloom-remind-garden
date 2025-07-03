@@ -56,6 +56,17 @@ import { PlantCareWorkshop } from './PlantCareWorkshop';
 import { PlantMeditation } from './PlantMeditation';
 import { PlantMusic } from './PlantMusic';
 import { PlantAugmentedReality } from './PlantAugmentedReality';
+
+// New small features
+import { QuickPlantStatus } from './QuickPlantStatus';
+import { PlantCareStreak } from './PlantCareStreak';
+import { WeatherAlert } from './WeatherAlert';
+import { PlantWateringHistory } from './PlantWateringHistory';
+import { PlantGrowthChart } from './PlantGrowthChart';
+import { PlantCareNotes } from './PlantCareNotes';
+import { PlantHealthScore } from './PlantHealthScore';
+import { QuickActions } from './QuickActions';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -64,7 +75,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnboarding } from '@/hooks/useOnboarding';
-import { Play, User, LogOut, Home, Wrench, Users, BookOpen, Trophy, ShoppingCart, Bot, Cloud, Brain, Camera, Dna, Leaf, Bug, Scissors, Droplets, Sun, Timer, Calculator, Package, Heart, History, FileText, AlertTriangle, MessageSquare, UserCheck, Calendar, Zap, TreePine, GraduationCap, Music, Headphones, Glasses } from 'lucide-react';
+import { Play, User, LogOut, Home, Wrench, Users, BookOpen, Trophy, ShoppingCart, Bot, Cloud, Brain, Camera, Dna, Leaf, Bug, Scissors, Droplets, Sun, Timer, Calculator, Package, Heart, History, FileText, AlertTriangle, MessageSquare, UserCheck, Calendar, Zap, TreePine, GraduationCap, Music, Headphones, Glasses, Sparkles } from 'lucide-react';
 
 export const Dashboard = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -202,6 +213,10 @@ export const Dashboard = () => {
                 <Home className="h-4 w-4" />
                 <span className="hidden sm:inline">Dashboard</span>
               </TabsTrigger>
+              <TabsTrigger value="quick" className="flex items-center gap-2 px-3 py-2 text-xs whitespace-nowrap">
+                <Sparkles className="h-4 w-4" />
+                <span className="hidden sm:inline">Quick</span>
+              </TabsTrigger>
               <TabsTrigger value="tools" className="flex items-center gap-2 px-3 py-2 text-xs whitespace-nowrap">
                 <Wrench className="h-4 w-4" />
                 <span className="hidden sm:inline">Tools</span>
@@ -261,6 +276,29 @@ export const Dashboard = () => {
 
             {/* Gardener Rank */}
             <GardenerRank refreshTrigger={refreshTrigger} />
+          </TabsContent>
+
+          <TabsContent value="quick" className="space-y-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <QuickActions />
+              <PlantCareStreak />
+              <WeatherAlert />
+              <PlantHealthScore plant={userPlants[0]} />
+              <PlantCareNotes />
+              <PlantGrowthChart />
+            </div>
+            
+            {/* Quick Plant Info */}
+            {userPlants.length > 0 && (
+              <div className="grid md:grid-cols-2 gap-6">
+                <PlantWateringHistory plant={userPlants[0]} />
+                <div className="space-y-4">
+                  {userPlants.slice(0, 3).map((plant, index) => (
+                    <QuickPlantStatus key={index} plant={plant} />
+                  ))}
+                </div>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="tools" className="space-y-6">
