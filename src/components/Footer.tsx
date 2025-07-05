@@ -21,8 +21,13 @@ export const Footer = () => {
           </div>
           
           <div>
-            <h3 className="text-sm font-semibold text-green-900 mb-4 font-lora">Features</h3>
+            <h3 className="text-sm font-semibold text-green-900 mb-4 font-lora">Tools & Features</h3>
             <ul className="space-y-2 text-sm">
+              <li>
+                <Link to="/" className="text-green-600 hover:text-green-800 transition-colors">
+                  Plant Care Tracker
+                </Link>
+              </li>
               <li>
                 <Link to="/gallery" className="text-green-600 hover:text-green-800 transition-colors flex items-center gap-1">
                   <Camera className="h-3 w-3" />
@@ -30,18 +35,24 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/blog" className="text-green-600 hover:text-green-800 transition-colors">
+                  Plant Care Blog
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-green-900 mb-4 font-lora">Company</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
                 <Link to="/about" className="text-green-600 hover:text-green-800 transition-colors">
                   About Us
                 </Link>
               </li>
               <li>
                 <Link to="/contact" className="text-green-600 hover:text-green-800 transition-colors">
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link to="/blog" className="text-green-600 hover:text-green-800 transition-colors">
-                  Plant Care Blog
+                  Contact Us
                 </Link>
               </li>
             </ul>
