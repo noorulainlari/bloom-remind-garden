@@ -76,6 +76,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { Play, User, LogOut, Home, Wrench, Users, BookOpen, Trophy, ShoppingCart, Bot, Cloud, Brain, Camera, Dna, Leaf, Bug, Scissors, Droplets, Sun, Timer, Calculator, Package, Heart, History, FileText, AlertTriangle, MessageSquare, UserCheck, Calendar, Zap, TreePine, GraduationCap, Music, Headphones, Glasses, Sparkles } from 'lucide-react';
+import { Footer } from './Footer';
 
 export const Dashboard = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -488,6 +489,9 @@ export const Dashboard = () => {
 
       {/* Floating Action Button */}
       <FloatingActionButton onPlantAdded={handlePlantAdded} />
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };
