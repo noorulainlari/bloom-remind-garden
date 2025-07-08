@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Search, Leaf, Droplets, Bug, Scissors, Sun, Timer, Camera, Brain, Users, Shield, Heart, Zap, 
          Sparkles, Lightbulb, Target, TrendingUp, Award, Gift, Calendar, Bell, Clock, Thermometer, Gauge, 
          Activity, BarChart3, LineChart, PieChart, Microscope, FlaskConical, Dna, Atom, Globe, Mountain, 
-         Wind, Cloud, Snowflake, Flower2, TreePine, Sprout, Apple, Cherry, Grape } from 'lucide-react';
+         Wind, Cloud, Snowflake, Flower2, TreePine, Sprout, Apple, Cherry, Grape, Calculator, AlertTriangle, BookOpen } from 'lucide-react';
 
 interface Feature {
   id: string;
@@ -78,6 +78,65 @@ const features: Feature[] = [
   { id: 'companion-planner', name: 'Companion Plant Planner', description: 'Plan optimal plant combinations for natural pest control and growth enhancement', category: 'tools', icon: TreePine, status: 'available', tags: ['companion', 'planning', 'optimization'] },
   { id: 'frost-protection', name: 'Frost Protection System', description: 'Early warning system and protection strategies for frost-sensitive plants', category: 'tools', icon: Snowflake, status: 'available', tags: ['frost', 'protection', 'alerts'] },
   { id: 'pollinator-garden', name: 'Pollinator Garden Designer', description: 'Design gardens specifically to attract and support pollinators', category: 'tools', icon: Flower2, status: 'available', tags: ['pollinators', 'design', 'ecology'] },
+
+  // Additional 50 Features (51-100+)
+  // Care & Monitoring - Extended (15 more)
+  { id: 'micro-climate', name: 'Micro-Climate Monitor', description: 'Track micro-environmental conditions around individual plants', category: 'care', icon: Thermometer, status: 'premium', tags: ['micro-climate', 'precision', 'environment'] },
+  { id: 'nutrient-tracker', name: 'Nutrient Deficiency Tracker', description: 'Visual identification and treatment of nutrient deficiencies', category: 'care', icon: Zap, status: 'available', tags: ['nutrients', 'deficiency', 'diagnosis'] },
+  { id: 'watering-calculator', name: 'Precision Watering Calculator', description: 'Calculate exact watering amounts based on plant size and conditions', category: 'care', icon: Calculator, status: 'available', tags: ['precision', 'calculation', 'water'] },
+  { id: 'transplant-guide', name: 'Transplant Success Guide', description: 'Step-by-step guidance for successful plant transplanting', category: 'care', icon: Scissors, status: 'available', tags: ['transplant', 'guidance', 'success'] },
+  { id: 'dormancy-tracker', name: 'Plant Dormancy Tracker', description: 'Monitor and manage plants through dormant periods', category: 'care', icon: Clock, status: 'available', tags: ['dormancy', 'seasonal', 'tracking'] },
+  { id: 'stress-detector', name: 'Plant Stress Detector', description: 'Early detection of plant stress through visual and environmental cues', category: 'care', icon: AlertTriangle, status: 'premium', tags: ['stress', 'early-detection', 'health'] },
+  { id: 'ph-monitor', name: 'Soil pH Monitor', description: 'Continuous monitoring and alerts for soil pH levels', category: 'care', icon: FlaskConical, status: 'premium', tags: ['ph', 'soil', 'chemistry'] },
+  { id: 'companion-care', name: 'Companion Plant Care', description: 'Coordinated care schedules for companion plant groupings', category: 'care', icon: Users, status: 'available', tags: ['companion', 'coordination', 'grouping'] },
+  { id: 'quarantine-protocol', name: 'Plant Quarantine Protocol', description: 'Systematic quarantine procedures for new or sick plants', category: 'care', icon: Shield, status: 'available', tags: ['quarantine', 'protocol', 'safety'] },
+  { id: 'recovery-program', name: 'Plant Recovery Program', description: 'Structured recovery plans for damaged or diseased plants', category: 'care', icon: Heart, status: 'available', tags: ['recovery', 'rehabilitation', 'treatment'] },
+  { id: 'air-quality', name: 'Air Quality Monitor', description: 'Monitor how plants improve indoor air quality', category: 'care', icon: Wind, status: 'premium', tags: ['air-quality', 'indoor', 'health'] },
+  { id: 'growth-booster', name: 'Growth Booster Protocols', description: 'Advanced techniques to accelerate healthy plant growth', category: 'care', icon: TrendingUp, status: 'premium', tags: ['growth', 'acceleration', 'techniques'] },
+  { id: 'water-quality', name: 'Water Quality Tester', description: 'Test and optimize water quality for plant health', category: 'care', icon: Droplets, status: 'premium', tags: ['water-quality', 'testing', 'optimization'] },
+  { id: 'sunlight-tracker', name: 'Daily Sunlight Tracker', description: 'Track actual sunlight exposure throughout the day', category: 'care', icon: Sun, status: 'available', tags: ['sunlight', 'tracking', 'daily'] },
+  { id: 'plant-massage', name: 'Plant Stimulation Therapy', description: 'Gentle stimulation techniques to promote growth', category: 'care', icon: Heart, status: 'coming-soon', tags: ['stimulation', 'therapy', 'growth'] },
+
+  // Analytics & Insights - Extended (15 more)
+  { id: 'ai-predictions', name: 'AI Growth Predictions', description: 'Machine learning predictions for plant development', category: 'analytics', icon: Brain, status: 'premium', tags: ['ai', 'predictions', 'ml'] },
+  { id: 'seasonal-analytics', name: 'Seasonal Performance Analytics', description: 'Compare plant performance across different seasons', category: 'analytics', icon: Calendar, status: 'available', tags: ['seasonal', 'performance', 'comparison'] },
+  { id: 'efficiency-scores', name: 'Care Efficiency Scores', description: 'Rate and improve your plant care efficiency', category: 'analytics', icon: Target, status: 'available', tags: ['efficiency', 'scoring', 'improvement'] },
+  { id: 'longevity-predictor', name: 'Plant Longevity Predictor', description: 'Estimate plant lifespan based on care quality', category: 'analytics', icon: Clock, status: 'premium', tags: ['longevity', 'prediction', 'lifespan'] },
+  { id: 'benchmark-analysis', name: 'Care Benchmark Analysis', description: 'Compare your care against optimal standards', category: 'analytics', icon: BarChart3, status: 'available', tags: ['benchmark', 'standards', 'comparison'] },
+  { id: 'habit-tracker', name: 'Gardening Habit Tracker', description: 'Track and improve your gardening habits over time', category: 'analytics', icon: Activity, status: 'available', tags: ['habits', 'improvement', 'tracking'] },
+  { id: 'resource-optimizer', name: 'Resource Usage Optimizer', description: 'Optimize water, fertilizer, and energy usage', category: 'analytics', icon: Gauge, status: 'premium', tags: ['optimization', 'resources', 'efficiency'] },
+  { id: 'mood-correlation', name: 'Plant Mood Correlation', description: 'Correlate your mood with plant care activities', category: 'analytics', icon: Heart, status: 'coming-soon', tags: ['mood', 'correlation', 'wellness'] },
+  { id: 'space-utilization', name: 'Space Utilization Analytics', description: 'Optimize your growing space for maximum plants', category: 'analytics', icon: Target, status: 'available', tags: ['space', 'utilization', 'optimization'] },
+  { id: 'disease-patterns', name: 'Disease Pattern Analysis', description: 'Identify patterns in plant disease occurrence', category: 'analytics', icon: Microscope, status: 'premium', tags: ['disease', 'patterns', 'analysis'] },
+  { id: 'investment-roi', name: 'Gardening Investment ROI', description: 'Calculate return on investment for your garden', category: 'analytics', icon: PieChart, status: 'available', tags: ['roi', 'investment', 'financial'] },
+  { id: 'productivity-index', name: 'Garden Productivity Index', description: 'Measure overall garden productivity and health', category: 'analytics', icon: TrendingUp, status: 'available', tags: ['productivity', 'index', 'measurement'] },
+  { id: 'failure-analysis', name: 'Plant Failure Analysis', description: 'Learn from plant failures to prevent future issues', category: 'analytics', icon: AlertTriangle, status: 'available', tags: ['failure', 'analysis', 'learning'] },
+  { id: 'growth-velocity', name: 'Growth Velocity Tracker', description: 'Track and analyze plant growth rates over time', category: 'analytics', icon: LineChart, status: 'premium', tags: ['velocity', 'growth-rate', 'tracking'] },
+  { id: 'care-consistency', name: 'Care Consistency Monitor', description: 'Monitor and improve care routine consistency', category: 'analytics', icon: Clock, status: 'available', tags: ['consistency', 'routine', 'monitoring'] },
+
+  // Community & Social - Extended (10 more)
+  { id: 'plant-dating', name: 'Plant Parent Dating', description: 'Connect with other plant parents for friendship and advice', category: 'social', icon: Heart, status: 'coming-soon', tags: ['dating', 'friendship', 'connection'] },
+  { id: 'skill-exchange', name: 'Skill Exchange Platform', description: 'Exchange gardening skills and knowledge with others', category: 'social', icon: Brain, status: 'available', tags: ['skills', 'exchange', 'learning'] },
+  { id: 'plant-therapy', name: 'Plant Therapy Groups', description: 'Join therapeutic gardening groups for mental wellness', category: 'social', icon: Heart, status: 'premium', tags: ['therapy', 'wellness', 'groups'] },
+  { id: 'global-garden', name: 'Global Garden Network', description: 'Connect with gardeners worldwide for cultural exchange', category: 'social', icon: Globe, status: 'available', tags: ['global', 'cultural', 'network'] },
+  { id: 'mentor-program', name: 'Gardening Mentor Program', description: 'Get paired with experienced gardening mentors', category: 'social', icon: Users, status: 'premium', tags: ['mentorship', 'guidance', 'experience'] },
+  { id: 'plant-rescue', name: 'Plant Rescue Network', description: 'Coordinate plant rescue and rehabilitation efforts', category: 'social', icon: Shield, status: 'available', tags: ['rescue', 'rehabilitation', 'network'] },
+  { id: 'seed-swap', name: 'Global Seed Swap', description: 'Exchange rare and unique seeds with gardeners worldwide', category: 'social', icon: Gift, status: 'available', tags: ['seeds', 'exchange', 'rare'] },
+  { id: 'garden-stories', name: 'Garden Story Sharing', description: 'Share and read inspiring gardening stories', category: 'social', icon: BookOpen, status: 'available', tags: ['stories', 'inspiration', 'sharing'] },
+  { id: 'live-consultations', name: 'Live Expert Consultations', description: 'Book live video calls with plant experts', category: 'social', icon: Camera, status: 'premium', tags: ['live', 'video', 'expert'] },
+  { id: 'plant-influencers', name: 'Plant Influencer Network', description: 'Follow and learn from top plant influencers', category: 'social', icon: Users, status: 'available', tags: ['influencers', 'following', 'learning'] },
+
+  // Advanced Tools - Extended (10 more)
+  { id: 'dna-analysis', name: 'Plant DNA Analysis', description: 'Analyze plant genetics for optimal care strategies', category: 'tools', icon: Dna, status: 'premium', tags: ['dna', 'genetics', 'analysis'] },
+  { id: 'holographic-garden', name: 'Holographic Garden Planner', description: 'Plan your garden using holographic visualization', category: 'tools', icon: Sparkles, status: 'coming-soon', tags: ['holographic', 'visualization', 'future'] },
+  { id: 'nano-sensors', name: 'Nano Sensor Network', description: 'Deploy nano-sensors for ultra-precise monitoring', category: 'tools', icon: Atom, status: 'premium', tags: ['nano', 'sensors', 'precision'] },
+  { id: 'quantum-growth', name: 'Quantum Growth Enhancement', description: 'Use quantum field technology to enhance plant growth', category: 'tools', icon: Zap, status: 'coming-soon', tags: ['quantum', 'enhancement', 'future'] },
+  { id: 'robotic-care', name: 'Robotic Plant Care', description: 'Automated robotic systems for plant maintenance', category: 'tools', icon: Brain, status: 'premium', tags: ['robotic', 'automation', 'maintenance'] },
+  { id: 'satellite-monitoring', name: 'Satellite Garden Monitoring', description: 'Monitor large gardens using satellite imagery', category: 'tools', icon: Globe, status: 'premium', tags: ['satellite', 'monitoring', 'large-scale'] },
+  { id: 'bio-feedback', name: 'Plant Bio-Feedback System', description: 'Real-time communication with plants through bio-signals', category: 'tools', icon: Activity, status: 'coming-soon', tags: ['bio-feedback', 'communication', 'signals'] },
+  { id: 'weather-machine', name: 'Personal Weather Machine', description: 'Create optimal weather conditions for your plants', category: 'tools', icon: Cloud, status: 'coming-soon', tags: ['weather', 'control', 'optimal'] },
+  { id: 'time-lapse', name: 'Automated Time-lapse Creator', description: 'Create beautiful time-lapse videos of plant growth', category: 'tools', icon: Camera, status: 'available', tags: ['time-lapse', 'video', 'growth'] },
+  { id: 'virtual-botanist', name: 'Virtual Botanist AI', description: 'AI botanist available 24/7 for plant questions', category: 'tools', icon: Brain, status: 'premium', tags: ['ai', 'botanist', '24-7'] },
 ];
 
 const categories = [
@@ -147,10 +206,10 @@ export const PlantFeatures = () => {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-green-800 dark:text-green-200">
-              🌿 50+ Advanced Plant Care Features
+              🌿 100+ Advanced Plant Care Features
             </CardTitle>
             <CardDescription>
-              Discover comprehensive tools and features to take your plant care to the next level
+              Discover the most comprehensive plant care ecosystem with over 100 features
             </CardDescription>
           </CardHeader>
           <CardContent>
