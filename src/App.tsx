@@ -17,6 +17,7 @@ import { Terms } from "@/pages/Terms";
 import { AdsTxt } from "@/pages/AdsTxt";
 import { SEOHead } from "@/components/SEOHead";
 import PlantGallery from "@/pages/PlantGallery";
+import PlantFeatures from "@/pages/PlantFeatures";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
@@ -50,6 +51,7 @@ const AppContent = () => {
         <Route path="/" element={<Dashboard />} />
         <Route path="/welcome" element={<Index />} />
         <Route path="/gallery" element={<PlantGallery />} />
+        <Route path="/features" element={<PlantFeatures />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/blog" element={<BlogList />} />

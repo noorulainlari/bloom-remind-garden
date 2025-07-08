@@ -8,7 +8,7 @@ import { PlantReminders } from './PlantReminders';
 import { FloatingActionButton } from './FloatingActionButton';
 import { Navigation } from './Navigation';
 import { PlantSelector } from './PlantSelector';
-import { SoundSettings } from './SoundSettings';
+import { ImprovedSoundSettings } from './ImprovedSoundSettings';
 import { AuthForm } from './AuthForm';
 import { PlantCareStats } from './PlantCareStats';
 import { WeatherWidget } from './WeatherWidget';
@@ -75,7 +75,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnboarding } from '@/hooks/useOnboarding';
-import { Play, User, LogOut, Home, Wrench, Users, BookOpen, Trophy, ShoppingCart, Bot, Cloud, Brain, Camera, Dna, Leaf, Bug, Scissors, Droplets, Sun, Timer, Calculator, Package, Heart, History, FileText, AlertTriangle, MessageSquare, UserCheck, Calendar, Zap, TreePine, GraduationCap, Music, Headphones, Glasses, Sparkles } from 'lucide-react';
+import { Play, User, LogOut, Home, Wrench, Users, BookOpen, Trophy, ShoppingCart, Bot, Cloud, Brain, Camera, Dna, Leaf, Bug, Scissors, Droplets, Sun, Timer, Calculator, Package, Heart, History, FileText, AlertTriangle, MessageSquare, UserCheck, Calendar, Zap, TreePine, GraduationCap, Music, Headphones, Glasses, Sparkles, Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Footer } from './Footer';
 
 export const Dashboard = () => {
@@ -130,7 +131,18 @@ export const Dashboard = () => {
             Your complete plant care ecosystem with 100+ features for the ultimate gardening experience!
           </p>
           
-          <div className="flex justify-center gap-4 flex-wrap">
+            <div className="flex justify-center gap-4 flex-wrap">
+            {/* Features Page Button */}
+            <Link to="/features">
+              <Button 
+                className="garden-button bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold shadow-lg"
+                size="sm"
+              >
+                <Star className="h-4 w-4 mr-2" />
+                50+ Features
+              </Button>
+            </Link>
+
             {/* Onboarding Start Button */}
             <Button 
               onClick={startOnboarding}
@@ -485,7 +497,7 @@ export const Dashboard = () => {
       </div>
 
       {/* Sound Settings - Fixed Position */}
-      <SoundSettings />
+      <ImprovedSoundSettings />
 
       {/* Floating Action Button */}
       <FloatingActionButton onPlantAdded={handlePlantAdded} />
