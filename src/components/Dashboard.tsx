@@ -12,20 +12,25 @@ import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { ImprovedSoundSettings } from "./ImprovedSoundSettings";
 import { PlantQuiz } from "./PlantQuiz";
+import { FeatureHub } from "./features/FeatureHub";
 import { Button } from "./ui/button";
-import { Brain, Sparkles, Volume2 } from "lucide-react";
+import { Brain, Sparkles, Volume2, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "react-router-dom";
+import { addDays } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 export const Dashboard = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [plants, setPlants] = useState<any[]>([]);
   const [showSounds, setShowSounds] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
+  const [showFeatureHub, setShowFeatureHub] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     loadPlants();
@@ -70,6 +75,48 @@ export const Dashboard = () => {
     setShowAuth(showAuth);
   };
 
+  const handleWaterPlant = async (plantId: string) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const plant = plants.find(p => p.id === plantId);
+      if (!plant) return;
+
+      const nextWaterDate = addDays(new Date(today), plant.watering_interval_days);
+      const timestamp = new Date().toISOString();
+
+      if (user) {
+        const { error } = await supabase
+          .from('user_plants')
+          .update({
+            last_watered: today,
+            next_water_date: nextWaterDate.toISOString().split('T')[0],
+            last_watered_timestamp: timestamp
+          })
+          .eq('id', plantId);
+
+        if (error) {
+          console.error('Database update error:', error);
+          return;
+        }
+      } else {
+        const localPlants = JSON.parse(localStorage.getItem('localPlants') || '[]');
+        const updatedPlants = localPlants.map((p: any) => 
+          p.id === plantId ? {
+            ...p,
+            last_watered: today,
+            next_water_date: nextWaterDate.toISOString().split('T')[0],
+            last_watered_timestamp: timestamp
+          } : p
+        );
+        localStorage.setItem('localPlants', JSON.stringify(updatedPlants));
+      }
+
+      loadPlants(); // Refresh plants data
+    } catch (error) {
+      console.error('Error updating plant:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <Header onAdminToggle={handleAdminToggle} onAuthToggle={handleAuthToggle} />
@@ -86,7 +133,7 @@ export const Dashboard = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-4 gap-4">
             <Link to="/features">
               <Button className="w-full h-16 text-lg bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700">
                 <Sparkles className="h-5 w-5 mr-2" />
@@ -109,10 +156,25 @@ export const Dashboard = () => {
               <Volume2 className="h-5 w-5 mr-2" />
               Nature Sounds
             </Button>
+
+            <Button 
+              className="w-full h-16 text-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+              onClick={() => setShowFeatureHub(!showFeatureHub)}
+            >
+              <Settings className="h-5 w-5 mr-2" />
+              Feature Hub
+            </Button>
           </div>
 
           {showQuiz && <PlantQuiz />}
           {showSounds && <ImprovedSoundSettings />}
+          {showFeatureHub && (
+            <FeatureHub 
+              plants={plants} 
+              onWaterPlant={handleWaterPlant}
+              onClose={() => setShowFeatureHub(false)}
+            />
+          )}
 
           <PlantSelector onPlantAdded={handlePlantAdded} />
           <PlantList refreshTrigger={refreshTrigger} />
