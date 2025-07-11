@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { PlantSelector } from "./PlantSelector";
 import { PlantList } from "./PlantList";
@@ -22,6 +23,8 @@ export const Dashboard = () => {
   const [plants, setPlants] = useState<any[]>([]);
   const [showSounds, setShowSounds] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -59,9 +62,17 @@ export const Dashboard = () => {
     setRefreshTrigger(prev => prev + 1);
   };
 
+  const handleAdminToggle = (isAdmin: boolean) => {
+    setShowAdmin(isAdmin);
+  };
+
+  const handleAuthToggle = (showAuth: boolean) => {
+    setShowAuth(showAuth);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      <Header />
+      <Header onAdminToggle={handleAdminToggle} onAuthToggle={handleAuthToggle} />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
@@ -112,7 +123,7 @@ export const Dashboard = () => {
 
           <div className="grid md:grid-cols-2 gap-6">
             <PlantInventory plants={plants} />
-            <WateringCalendar />
+            <WateringCalendar plants={plants} />
           </div>
 
           <RandomPlantTip />
