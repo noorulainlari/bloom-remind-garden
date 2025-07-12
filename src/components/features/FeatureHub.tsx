@@ -16,6 +16,7 @@ interface FeatureHubProps {
 }
 
 export const FeatureHub = ({ plants, onWaterPlant, onClose }: FeatureHubProps) => {
+  console.log('FeatureHub: Received props:', { plants, onWaterPlant: typeof onWaterPlant, onClose: typeof onClose });
   const [activeFeature, setActiveFeature] = useState('watering');
 
   const features = [

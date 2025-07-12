@@ -76,20 +76,72 @@ export const Dashboard = () => {
   };
 
   const handleWaterPlant = async (plantId: string) => {
+    console.log('handleWaterPlant called with plantId:', plantId);
+    console.log('Current plants:', plants);
+    
     try {
-      const today = new Date().toISOString().split('T')[0];
+      // Safe date formatting with error handling
+      const getCurrentDate = () => {
+        try {
+          const dateStr = new Date().toISOString();
+          console.log('Generated ISO string:', dateStr);
+          if (!dateStr || typeof dateStr !== 'string') {
+            throw new Error('Invalid date string generated');
+          }
+          return dateStr.split('T')[0];
+        } catch (error) {
+          console.error('Error generating current date:', error);
+          // Fallback to manual date formatting
+          const now = new Date();
+          return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        }
+      };
+
+      const today = getCurrentDate();
+      console.log('Today date:', today);
+      
       const plant = plants.find(p => p.id === plantId);
-      if (!plant) return;
+      console.log('Found plant:', plant);
+      
+      if (!plant) {
+        console.warn('Plant not found for ID:', plantId);
+        return;
+      }
+
+      if (!plant.watering_interval_days || typeof plant.watering_interval_days !== 'number') {
+        console.warn('Invalid watering interval for plant:', plant);
+        return;
+      }
 
       const nextWaterDate = addDays(new Date(today), plant.watering_interval_days);
+      console.log('Next water date calculated:', nextWaterDate);
+      
+      // Safe ISO string conversion
+      const getNextWaterDateString = () => {
+        try {
+          const isoString = nextWaterDate.toISOString();
+          if (!isoString || typeof isoString !== 'string') {
+            throw new Error('Invalid next water date ISO string');
+          }
+          return isoString.split('T')[0];
+        } catch (error) {
+          console.error('Error formatting next water date:', error);
+          return today; // Fallback to today's date
+        }
+      };
+
+      const nextWaterDateString = getNextWaterDateString();
+      console.log('Next water date string:', nextWaterDateString);
+      
       const timestamp = new Date().toISOString();
 
       if (user) {
+        console.log('Updating database for user:', user.id);
         const { error } = await supabase
           .from('user_plants')
           .update({
             last_watered: today,
-            next_water_date: nextWaterDate.toISOString().split('T')[0],
+            next_water_date: nextWaterDateString,
             last_watered_timestamp: timestamp
           })
           .eq('id', plantId);
@@ -98,22 +150,35 @@ export const Dashboard = () => {
           console.error('Database update error:', error);
           return;
         }
+        console.log('Database updated successfully');
       } else {
+        console.log('Updating localStorage');
         const localPlants = JSON.parse(localStorage.getItem('localPlants') || '[]');
         const updatedPlants = localPlants.map((p: any) => 
           p.id === plantId ? {
             ...p,
             last_watered: today,
-            next_water_date: nextWaterDate.toISOString().split('T')[0],
+            next_water_date: nextWaterDateString,
             last_watered_timestamp: timestamp
           } : p
         );
         localStorage.setItem('localPlants', JSON.stringify(updatedPlants));
+        console.log('localStorage updated successfully');
       }
+
+      toast({
+        title: "🌱 Plant Watered!",
+        description: `${plant.plant_name || 'Your plant'} has been watered successfully.`,
+      });
 
       loadPlants(); // Refresh plants data
     } catch (error) {
       console.error('Error updating plant:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update plant watering status. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 

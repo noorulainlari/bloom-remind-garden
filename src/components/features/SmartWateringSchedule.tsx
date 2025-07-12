@@ -28,70 +28,96 @@ export const SmartWateringSchedule = ({ plants, onWaterPlant }: SmartWateringSch
   }, [plants]);
 
   const generateRecommendations = () => {
+    console.log('SmartWateringSchedule: generateRecommendations called with plants:', plants);
+    
     // Add error handling to prevent undefined errors
     if (!plants || !Array.isArray(plants)) {
-      console.warn('Plants data is not available or invalid');
+      console.warn('Plants data is not available or invalid:', plants);
       setRecommendations([]);
       return;
     }
 
     const today = new Date();
     const weather = getWeatherCondition();
+    console.log('Weather condition:', weather);
     
-    const recs = plants.map(plant => {
-      // Add safety checks for plant properties
-      if (!plant || typeof plant !== 'object') {
-        console.warn('Invalid plant object:', plant);
-        return null;
-      }
-
-      const plantName = plant.plant_name || 'Unknown Plant';
-      const nextWaterDate = plant.next_water_date;
-      
-      // Safety check for date parsing
-      let daysUntilWater = 0;
-      if (nextWaterDate && typeof nextWaterDate === 'string') {
-        try {
-          const nextWater = new Date(nextWaterDate);
-          if (!isNaN(nextWater.getTime())) {
-            daysUntilWater = Math.ceil((nextWater.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          }
-        } catch (error) {
-          console.warn('Error parsing next water date:', nextWaterDate, error);
+    try {
+      const recs = plants.map((plant, index) => {
+        console.log(`Processing plant ${index}:`, plant);
+        
+        // Add safety checks for plant properties
+        if (!plant || typeof plant !== 'object') {
+          console.warn('Invalid plant object at index', index, ':', plant);
+          return null;
         }
-      }
-      
-      let recommendation = 'On Schedule';
-      let priority = 'low';
-      let adjustedDays = daysUntilWater;
 
-      // AI-powered adjustments based on conditions
-      if (weather.temperature > 30 && weather.humidity < 40) {
-        adjustedDays -= 1;
-        recommendation = 'Water Early (Hot & Dry)';
-        priority = 'high';
-      } else if (weather.humidity > 80) {
-        adjustedDays += 1;
-        recommendation = 'Delay Watering (High Humidity)';
-        priority = 'low';
-      }
+        // Safe property access with detailed logging
+        console.log('Plant properties check:', {
+          plant_name: plant.plant_name,
+          next_water_date: plant.next_water_date,
+          hasPlantName: 'plant_name' in plant,
+          hasNextWaterDate: 'next_water_date' in plant
+        });
 
-      if (daysUntilWater <= 0) {
-        recommendation = 'Needs Water Now!';
-        priority = 'urgent';
-      }
+        const plantName = plant.plant_name || 'Unknown Plant';
+        const nextWaterDate = plant.next_water_date;
+        
+        // Safety check for date parsing
+        let daysUntilWater = 0;
+        if (nextWaterDate) {
+          console.log('Processing next water date:', nextWaterDate, 'type:', typeof nextWaterDate);
+          
+          if (typeof nextWaterDate === 'string') {
+            try {
+              const nextWater = new Date(nextWaterDate);
+              if (!isNaN(nextWater.getTime())) {
+                daysUntilWater = Math.ceil((nextWater.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+              }
+            } catch (error) {
+              console.warn('Error parsing next water date:', nextWaterDate, error);
+            }
+          }
+        }
+        
+        let recommendation = 'On Schedule';
+        let priority = 'low';
+        let adjustedDays = daysUntilWater;
 
-      return {
-        ...plant,
-        plant_name: plantName,
-        recommendation,
-        priority,
-        adjustedDays,
-        weather: weather
-      };
-    }).filter(Boolean); // Remove any null entries
+        // AI-powered adjustments based on conditions
+        if (weather && weather.temperature > 30 && weather.humidity < 40) {
+          adjustedDays -= 1;
+          recommendation = 'Water Early (Hot & Dry)';
+          priority = 'high';
+        } else if (weather && weather.humidity > 80) {
+          adjustedDays += 1;
+          recommendation = 'Delay Watering (High Humidity)';
+          priority = 'low';
+        }
 
-    setRecommendations(recs);
+        if (daysUntilWater <= 0) {
+          recommendation = 'Needs Water Now!';
+          priority = 'urgent';
+        }
+
+        const result = {
+          ...plant,
+          plant_name: plantName,
+          recommendation,
+          priority,
+          adjustedDays,
+          weather: weather
+        };
+        
+        console.log('Plant processing result:', result);
+        return result;
+      }).filter(Boolean); // Remove any null entries
+
+      console.log('Final recommendations:', recs);
+      setRecommendations(recs);
+    } catch (error) {
+      console.error('Error in generateRecommendations:', error);
+      setRecommendations([]);
+    }
   };
 
   const getWeatherCondition = () => {
