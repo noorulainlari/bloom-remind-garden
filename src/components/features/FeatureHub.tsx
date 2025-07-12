@@ -53,19 +53,17 @@ export const FeatureHub = ({ plants, onWaterPlant, onClose }: FeatureHubProps) =
     const feature = features.find(f => f.id === activeFeature);
     if (!feature) return null;
 
-    const Component = feature.component;
-    
     // Add proper error handling and ensure all required props are passed
     try {
       switch (activeFeature) {
         case 'watering':
-          return <Component plants={plants || []} onWaterPlant={onWaterPlant} />;
+          return <SmartWateringSchedule plants={plants || []} onWaterPlant={onWaterPlant} />;
         case 'health':
-          return <Component plants={plants || []} />;
+          return <PlantHealthMonitor plants={plants || []} />;
         case 'analytics':
-          return <Component plants={plants || []} />;
+          return <GrowthAnalytics plants={plants || []} />;
         case 'disease':
-          return <Component />;
+          return <DiseaseScanner />;
         default:
           return null;
       }
