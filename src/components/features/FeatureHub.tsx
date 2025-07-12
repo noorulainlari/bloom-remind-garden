@@ -61,6 +61,7 @@ export const FeatureHub = ({ plants, onWaterPlant, onClose }: FeatureHubProps) =
         case 'watering':
           return <Component plants={plants || []} onWaterPlant={onWaterPlant} />;
         case 'health':
+          return <Component plants={plants || []} />;
         case 'analytics':
           return <Component plants={plants || []} />;
         case 'disease':
