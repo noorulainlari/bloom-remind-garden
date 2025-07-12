@@ -13,7 +13,9 @@ import { Footer } from "./Footer";
 import { ImprovedSoundSettings } from "./ImprovedSoundSettings";
 import { PlantQuiz } from "./PlantQuiz";
 import { FeatureHub } from "./features/FeatureHub";
+import { AuthForm } from "./AuthForm";
 import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Brain, Sparkles, Volume2, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -240,6 +242,15 @@ export const Dashboard = () => {
               onClose={() => setShowFeatureHub(false)}
             />
           )}
+
+          <Dialog open={showAuth} onOpenChange={setShowAuth}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Authentication</DialogTitle>
+              </DialogHeader>
+              <AuthForm onSuccess={() => setShowAuth(false)} />
+            </DialogContent>
+          </Dialog>
 
           <PlantSelector onPlantAdded={handlePlantAdded} />
           <PlantList refreshTrigger={refreshTrigger} />
