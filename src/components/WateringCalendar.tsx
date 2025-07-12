@@ -22,15 +22,27 @@ export const WateringCalendar = ({ plants }: WateringCalendarProps) => {
 
   const getPlantsDueOnDate = (date: Date) => {
     return plants.filter(plant => {
-      const nextWaterDate = parseISO(plant.next_water_date);
-      return isSameDay(nextWaterDate, date);
+      if (!plant.next_water_date) return false;
+      try {
+        const nextWaterDate = parseISO(plant.next_water_date);
+        return isSameDay(nextWaterDate, date);
+      } catch (error) {
+        console.warn('Error parsing next_water_date:', plant.next_water_date, error);
+        return false;
+      }
     });
   };
 
   const getPlantsWateredOnDate = (date: Date) => {
     return plants.filter(plant => {
-      const lastWateredDate = parseISO(plant.last_watered);
-      return isSameDay(lastWateredDate, date);
+      if (!plant.last_watered) return false;
+      try {
+        const lastWateredDate = parseISO(plant.last_watered);
+        return isSameDay(lastWateredDate, date);
+      } catch (error) {
+        console.warn('Error parsing last_watered:', plant.last_watered, error);
+        return false;
+      }
     });
   };
 
