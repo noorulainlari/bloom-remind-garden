@@ -28,12 +28,38 @@ export const SmartWateringSchedule = ({ plants, onWaterPlant }: SmartWateringSch
   }, [plants]);
 
   const generateRecommendations = () => {
+    // Add error handling to prevent undefined errors
+    if (!plants || !Array.isArray(plants)) {
+      console.warn('Plants data is not available or invalid');
+      setRecommendations([]);
+      return;
+    }
+
     const today = new Date();
-    const weather = getWeatherCondition(); // Mock weather data
+    const weather = getWeatherCondition();
     
     const recs = plants.map(plant => {
-      const nextWater = new Date(plant.next_water_date);
-      const daysUntilWater = Math.ceil((nextWater.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      // Add safety checks for plant properties
+      if (!plant || typeof plant !== 'object') {
+        console.warn('Invalid plant object:', plant);
+        return null;
+      }
+
+      const plantName = plant.plant_name || 'Unknown Plant';
+      const nextWaterDate = plant.next_water_date;
+      
+      // Safety check for date parsing
+      let daysUntilWater = 0;
+      if (nextWaterDate && typeof nextWaterDate === 'string') {
+        try {
+          const nextWater = new Date(nextWaterDate);
+          if (!isNaN(nextWater.getTime())) {
+            daysUntilWater = Math.ceil((nextWater.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          }
+        } catch (error) {
+          console.warn('Error parsing next water date:', nextWaterDate, error);
+        }
+      }
       
       let recommendation = 'On Schedule';
       let priority = 'low';
@@ -57,12 +83,13 @@ export const SmartWateringSchedule = ({ plants, onWaterPlant }: SmartWateringSch
 
       return {
         ...plant,
+        plant_name: plantName,
         recommendation,
         priority,
         adjustedDays,
         weather: weather
       };
-    });
+    }).filter(Boolean); // Remove any null entries
 
     setRecommendations(recs);
   };
@@ -86,13 +113,35 @@ export const SmartWateringSchedule = ({ plants, onWaterPlant }: SmartWateringSch
   };
 
   const handleWaterNow = (plantId: string) => {
-    onWaterPlant(plantId);
-    toast({
-      title: "🌱 Plant Watered!",
-      description: "Smart watering schedule updated based on current conditions.",
-    });
-    generateRecommendations();
+    if (typeof onWaterPlant === 'function') {
+      onWaterPlant(plantId);
+      toast({
+        title: "🌱 Plant Watered!",
+        description: "Smart watering schedule updated based on current conditions.",
+      });
+      generateRecommendations();
+    }
   };
+
+  // Handle case when no plants are available
+  if (!plants || plants.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Droplets className="h-5 w-5 text-blue-500" />
+            Smart Watering Schedule
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <Droplets className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600">No plants found. Add some plants to get watering recommendations!</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full">
@@ -104,27 +153,27 @@ export const SmartWateringSchedule = ({ plants, onWaterPlant }: SmartWateringSch
       </CardHeader>
       <CardContent className="space-y-4">
         {recommendations.map((rec) => (
-          <div key={rec.id} className="p-4 border rounded-lg space-y-3">
+          <div key={rec.id || Math.random()} className="p-4 border rounded-lg space-y-3">
             <div className="flex justify-between items-center">
-              <h3 className="font-semibold">{rec.plant_name}</h3>
+              <h3 className="font-semibold">{rec.plant_name || 'Unknown Plant'}</h3>
               <Badge className={`${getPriorityColor(rec.priority)} text-white`}>
-                {rec.priority.toUpperCase()}
+                {(rec.priority || 'low').toUpperCase()}
               </Badge>
             </div>
             
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                <span>Next: {rec.adjustedDays}d</span>
+                <span>Next: {rec.adjustedDays || 0}d</span>
               </div>
               <div className="flex items-center gap-2">
                 <Thermometer className="h-4 w-4" />
-                <span>{rec.weather.temperature}°C</span>
+                <span>{rec.weather?.temperature || 25}°C</span>
               </div>
             </div>
 
             <div className="bg-blue-50 p-2 rounded text-sm">
-              <strong>AI Recommendation:</strong> {rec.recommendation}
+              <strong>AI Recommendation:</strong> {rec.recommendation || 'No recommendation available'}
             </div>
 
             {rec.priority === 'urgent' && (

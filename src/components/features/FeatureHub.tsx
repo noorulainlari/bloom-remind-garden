@@ -55,16 +55,26 @@ export const FeatureHub = ({ plants, onWaterPlant, onClose }: FeatureHubProps) =
 
     const Component = feature.component;
     
-    switch (activeFeature) {
-      case 'watering':
-        return <Component plants={plants} onWaterPlant={onWaterPlant} />;
-      case 'health':
-      case 'analytics':
-        return <Component plants={plants} />;
-      case 'disease':
-        return <Component />;
-      default:
-        return null;
+    // Add proper error handling and ensure all required props are passed
+    try {
+      switch (activeFeature) {
+        case 'watering':
+          return <Component plants={plants || []} onWaterPlant={onWaterPlant} />;
+        case 'health':
+        case 'analytics':
+          return <Component plants={plants || []} />;
+        case 'disease':
+          return <Component />;
+        default:
+          return null;
+      }
+    } catch (error) {
+      console.error('Error rendering feature component:', error);
+      return (
+        <div className="p-4 text-center text-red-600">
+          <p>Unable to load this feature. Please try refreshing the page.</p>
+        </div>
+      );
     }
   };
 
