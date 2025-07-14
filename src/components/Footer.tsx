@@ -62,7 +62,7 @@ export const Footer = () => {
             <h3 className="text-sm font-semibold text-green-900 mb-4 font-lora">Legal</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/privacy-policy" className="text-green-600 hover:text-green-800 transition-colors">
+                <Link to="/privacy" className="text-green-600 hover:text-green-800 transition-colors">
                   Privacy Policy
                 </Link>
               </li>
